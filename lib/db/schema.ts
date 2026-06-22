@@ -54,8 +54,8 @@ export const verification = pgTable('verification', {
 })
 
 // --- Enums ---
-export const userRoleEnum = pgEnum('user_role', ['customer', 'restaurant_owner', 'delivery_partner', 'admin'])
-export const orderStatusEnum = pgEnum('order_status', ['pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'in_transit', 'delivered', 'cancelled'])
+export const userRoleEnum = pgEnum('user_role', ['customer', 'restaurant_owner', 'delivery_partner', 'admin', 'super_admin'])
+export const orderStatusEnum = pgEnum('order_status', ['pending', 'confirmed', 'packing', 'ready', 'picked_up', 'in_transit', 'delivered', 'cancelled'])
 
 // --- App tables ---
 
