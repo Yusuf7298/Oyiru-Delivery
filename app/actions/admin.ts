@@ -1,65 +1,93 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { orders, restaurants, deliveryPartners, usersProfile, user } from '@/lib/db/schema'
-import { getUserId } from '@/lib/auth-utils'
+import { oyruOrders, hotelAccounts, products, categories_oyru } from '@/lib/db/schema'
+import { eq, count } from 'drizzle-orm'
 
 /**
  * Get platform statistics (admin only)
  */
 export async function getPlatformStats() {
-  const userId = await getUserId()
+  try {
+    // Get all orders
+    const allOrders = await db.select().from(oyruOrders)
+    const ordersCount = allOrders.length
+    const totalRevenue = allOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || '0'), 0)
 
-  // Verify admin role - in a real app, check the users_profile role
-  const allOrders = await db.select().from(orders)
-  const allRestaurants = await db.select().from(restaurants)
-  const allPartners = await db.select().from(deliveryPartners)
+    // Get hotels
+    const allHotels = await db.select().from(hotelAccounts)
+    
+    // Get products
+    const allProducts = await db.select().from(products)
+    const lowStockProducts = allProducts.filter(p => parseInt(p.stock || '0') < 10).length
 
-  const stats = {
-    totalOrders: allOrders.length,
-    totalRevenue: allOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount), 0),
-    activeRestaurants: allRestaurants.filter(r => r.isActive).length,
-    totalRestaurants: allRestaurants.length,
-    totalDeliveryPartners: allPartners.length,
-    activeDeliveryPartners: allPartners.filter(p => p.isActive).length,
-    recentOrders: allOrders.slice(0, 10),
+    const stats = {
+      totalOrders: ordersCount,
+      totalRevenue: totalRevenue,
+      activeHotels: allHotels.length,
+      totalProducts: allProducts.length,
+      lowStockItems: lowStockProducts,
+      recentOrders: allOrders.slice(-5),
+    }
+
+    return stats
+  } catch (error) {
+    console.error('[v0] Error getting platform stats:', error)
+    return {
+      totalOrders: 0,
+      totalRevenue: 0,
+      activeHotels: 0,
+      totalProducts: 0,
+      lowStockItems: 0,
+      recentOrders: [],
+    }
   }
-
-  return stats
 }
 
 /**
- * Get all restaurants
+ * Get all hotels
  */
-export async function getAllRestaurants() {
-  await getUserId() // Verify user is authenticated
-
-  return db.select().from(restaurants)
+export async function getAllHotels() {
+  try {
+    return await db.select().from(hotelAccounts)
+  } catch (error) {
+    console.error('[v0] Error getting hotels:', error)
+    return []
+  }
 }
 
 /**
  * Get all orders
  */
 export async function getAllOrders() {
-  await getUserId() // Verify user is authenticated
-
-  return db.select().from(orders)
+  try {
+    return await db.select().from(oyruOrders)
+  } catch (error) {
+    console.error('[v0] Error getting orders:', error)
+    return []
+  }
 }
 
 /**
- * Get all delivery partners
+ * Get all products
  */
-export async function getAllDeliveryPartners() {
-  await getUserId()
-
-  return db.select().from(deliveryPartners)
+export async function getAllProducts() {
+  try {
+    return await db.select().from(products)
+  } catch (error) {
+    console.error('[v0] Error getting products:', error)
+    return []
+  }
 }
 
 /**
- * Get all users
+ * Get product categories
  */
-export async function getAllUsers() {
-  await getUserId()
-
-  return db.select().from(users)
+export async function getCategories() {
+  try {
+    return await db.select().from(categories_oyru)
+  } catch (error) {
+    console.error('[v0] Error getting categories:', error)
+    return []
+  }
 }

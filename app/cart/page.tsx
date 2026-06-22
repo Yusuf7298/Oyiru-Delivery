@@ -3,9 +3,24 @@
 import Link from 'next/link'
 import { useCart } from '@/lib/contexts/cart-context'
 import { ArrowLeft, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, total } = useCart()
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  // Show loading state during hydration
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading cart...</p>
+      </div>
+    )
+  }
 
   if (cart.items.length === 0) {
     return (

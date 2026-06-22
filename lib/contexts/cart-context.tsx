@@ -33,23 +33,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     items: [],
     totalAmount: 0,
   })
+  const [isHydrated, setIsHydrated] = useState(false)
 
   // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('oyru_cart')
     if (savedCart) {
       try {
-        setCart(JSON.parse(savedCart))
+        const parsedCart = JSON.parse(savedCart)
+        setCart(parsedCart)
       } catch (error) {
-        console.error('Failed to load cart from localStorage:', error)
+        console.error('[v0] Failed to load cart from localStorage:', error)
       }
     }
+    setIsHydrated(true)
   }, [])
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to localStorage whenever it changes (only after hydration)
   useEffect(() => {
-    localStorage.setItem('oyru_cart', JSON.stringify(cart))
-  }, [cart])
+    if (isHydrated) {
+      localStorage.setItem('oyru_cart', JSON.stringify(cart))
+    }
+  }, [cart, isHydrated])
 
   const calculateTotal = useCallback((items: CartItem[]) => {
     return items.reduce((sum, item) => sum + item.price * item.quantity, 0)
