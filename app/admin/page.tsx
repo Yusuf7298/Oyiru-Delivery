@@ -86,13 +86,13 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Active Restaurants */}
+              {/* Product Catalog */}
               <div className="bg-card border border-border rounded-lg p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Active Restaurants</p>
+                    <p className="text-sm text-muted-foreground mb-1">Available Products</p>
                     <p className="text-3xl font-bold">
-                      {stats.activeRestaurants}/{stats.totalRestaurants}
+                      {stats.activeRestaurants || 0}
                     </p>
                   </div>
                   <Store className="w-10 h-10 text-blue-500 opacity-20" />
