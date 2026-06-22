@@ -3,16 +3,15 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 
 export interface CartItem {
-  dishId: string
-  dishName: string
-  restaurantId: string
+  productId: string
+  name: string
   price: number
   quantity: number
-  specialInstructions?: string
+  image?: string
+  categoryId?: string
 }
 
 export interface Cart {
-  restaurantId: string | null
   items: CartItem[]
   totalAmount: number
 }
@@ -20,8 +19,8 @@ export interface Cart {
 interface CartContextType {
   cart: Cart
   addToCart: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void
-  removeFromCart: (dishId: string) => void
-  updateQuantity: (dishId: string, quantity: number) => void
+  removeFromCart: (productId: string) => void
+  updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
   getCartTotal: () => number
   getItemCount: () => number
@@ -31,7 +30,6 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<Cart>({
-    restaurantId: null,
     items: [],
     totalAmount: 0,
   })
@@ -59,26 +57,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = useCallback((item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     setCart((prevCart) => {
-      // If adding from a different restaurant, ask to clear
-      if (prevCart.restaurantId && prevCart.restaurantId !== item.restaurantId) {
-        // In a real app, you'd show a dialog here
-        // For now, we'll clear the cart
-        const newCart: Cart = {
-          restaurantId: item.restaurantId,
-          items: [{ ...item, quantity: item.quantity || 1 }],
-          totalAmount: 0,
-        }
-        newCart.totalAmount = calculateTotal(newCart.items)
-        return newCart
-      }
-
       // Check if item already exists
-      const existingItem = prevCart.items.find((i) => i.dishId === item.dishId)
+      const existingItem = prevCart.items.find((i) => i.productId === item.productId)
       let newItems: CartItem[]
 
       if (existingItem) {
         newItems = prevCart.items.map((i) =>
-          i.dishId === item.dishId
+          i.productId === item.productId
             ? { ...i, quantity: i.quantity + (item.quantity || 1) }
             : i
         )
@@ -88,16 +73,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       return {
         ...prevCart,
-        restaurantId: item.restaurantId,
         items: newItems,
         totalAmount: calculateTotal(newItems),
       }
     })
   }, [calculateTotal])
 
-  const removeFromCart = useCallback((dishId: string) => {
+  const removeFromCart = useCallback((productId: string) => {
     setCart((prevCart) => {
-      const newItems = prevCart.items.filter((i) => i.dishId !== dishId)
+      const newItems = prevCart.items.filter((i) => i.productId !== productId)
       return {
         ...prevCart,
         items: newItems,
@@ -106,15 +90,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     })
   }, [calculateTotal])
 
-  const updateQuantity = useCallback((dishId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(dishId)
+      removeFromCart(productId)
       return
     }
 
     setCart((prevCart) => {
       const newItems = prevCart.items.map((i) =>
-        i.dishId === dishId ? { ...i, quantity } : i
+        i.productId === productId ? { ...i, quantity } : i
       )
       return {
         ...prevCart,
@@ -126,7 +110,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = useCallback(() => {
     setCart({
-      restaurantId: null,
       items: [],
       totalAmount: 0,
     })

@@ -274,3 +274,113 @@ export const dailyAnalytics = pgTable('daily_analytics', {
   activeDeliveryPartners: integer('activeDeliveryPartners').default(0),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
+
+// --- OYRU DELIVERY SPECIFIC TABLES ---
+
+export const paymentMethodEnum = pgEnum('payment_method', ['COD', 'INVOICE'])
+export const deliveryStatusEnum = pgEnum('delivery_status', ['assigned', 'picked_up', 'in_transit', 'delivered'])
+
+export const categories_oyru = pgTable('categories', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  image: text('image'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const products = pgTable('products', {
+  id: text('id').primaryKey(),
+  categoryId: text('categoryId').notNull().references(() => categories_oyru.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  image: text('image'),
+  price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+  weight: decimal('weight', { precision: 10, scale: 2 }),
+  unit: text('unit').default('piece'),
+  stockQuantity: integer('stockQuantity').notNull().default(0),
+  isAvailable: boolean('isAvailable').default(true),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const customerProfiles = pgTable('customer_profiles', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull().unique().references(() => user.id, { onDelete: 'cascade' }),
+  phone: text('phone'),
+  address: text('address'),
+  city: text('city'),
+  postalCode: text('postalCode'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const hotelAccounts = pgTable('hotel_accounts', {
+  id: text('id').primaryKey(),
+  companyName: text('companyName').notNull(),
+  contactPerson: text('contactPerson'),
+  email: text('email').unique(),
+  phone: text('phone'),
+  billingType: text('billingType').default('INVOICE'),
+  isActive: boolean('isActive').default(true),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const cart = pgTable('cart', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull().unique().references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const cartItems = pgTable('cart_items', {
+  id: text('id').primaryKey(),
+  cartId: text('cartId').notNull().references(() => cart.id, { onDelete: 'cascade' }),
+  productId: text('productId').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  quantity: integer('quantity').notNull().default(1),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const oyruOrders = pgTable('orders', {
+  id: text('id').primaryKey(),
+  userId: text('userId').references(() => user.id, { onDelete: 'cascade' }),
+  hotelAccountId: text('hotelAccountId').references(() => hotelAccounts.id, { onDelete: 'cascade' }),
+  orderNumber: text('orderNumber').notNull().unique(),
+  totalAmount: decimal('totalAmount', { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: paymentMethodEnum('paymentMethod').default('COD'),
+  deliveryAddress: text('deliveryAddress').notNull(),
+  deliveryNotes: text('deliveryNotes'),
+  status: text('status').default('pending'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const oyruOrderItems = pgTable('order_items', {
+  id: text('id').primaryKey(),
+  orderId: text('orderId').notNull().references(() => oyruOrders.id, { onDelete: 'cascade' }),
+  productId: text('productId').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  quantity: integer('quantity').notNull(),
+  unitPrice: decimal('unitPrice', { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const deliveries = pgTable('deliveries', {
+  id: text('id').primaryKey(),
+  orderId: text('orderId').notNull().unique().references(() => oyruOrders.id, { onDelete: 'cascade' }),
+  driverId: text('driverId').references(() => user.id, { onDelete: 'setNull' }),
+  status: deliveryStatusEnum('status').default('assigned'),
+  pickupTime: timestamp('pickupTime'),
+  deliveryTime: timestamp('deliveryTime'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const inventoryLogs = pgTable('inventory_logs', {
+  id: text('id').primaryKey(),
+  productId: text('productId').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  quantityChanged: integer('quantityChanged').notNull(),
+  reason: text('reason'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
