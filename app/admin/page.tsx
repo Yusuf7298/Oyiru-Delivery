@@ -141,6 +141,60 @@ export default function AdminDashboard() {
 
             {/* Management Sections */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Products Management */}
+              <Link href="/admin/products">
+                <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
+                      <ShoppingCart className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">Products</h3>
+                      <p className="text-sm text-muted-foreground">Manage product catalog</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-primary font-semibold">
+                    Manage inventory
+                  </p>
+                </div>
+              </Link>
+
+              {/* Oyru Orders Management */}
+              <Link href="/admin/oyru-orders">
+                <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 bg-cyan-100 rounded-lg group-hover:bg-cyan-200 transition-colors">
+                      <ShoppingCart className="w-6 h-6 text-cyan-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">Oyru Orders</h3>
+                      <p className="text-sm text-muted-foreground">Delivery orders management</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-primary font-semibold">
+                    View details
+                  </p>
+                </div>
+              </Link>
+
+              {/* Inventory Management */}
+              <Link href="/admin/inventory">
+                <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 bg-rose-100 rounded-lg group-hover:bg-rose-200 transition-colors">
+                      <Store className="w-6 h-6 text-rose-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">Inventory</h3>
+                      <p className="text-sm text-muted-foreground">Track stock levels</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-primary font-semibold">
+                    View inventory
+                  </p>
+                </div>
+              </Link>
+
               {/* Restaurants Management */}
               <Link href="/admin/restaurants">
                 <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">

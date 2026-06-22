@@ -11,8 +11,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Oyru - Food Delivery',
-  description: 'Order delicious food from your favorite restaurants',
+  title: 'Oyru - Fast Product Delivery',
+  description: 'Order products and essentials with fast delivery. Get your items delivered in minutes.',
   generator: 'v0.app',
   icons: {
     icon: [
