@@ -9,7 +9,7 @@ import {
   getAllDeliveryPartners,
 } from '@/app/actions/admin'
 import { Button } from '@/components/ui/button'
-import { BarChart3, Store, Truck, ShoppingCart, DollarSign, Users } from 'lucide-react'
+import { BarChart3, Store, Truck, ShoppingCart, DollarSign, Users, LineChart } from 'lucide-react'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null)
@@ -263,6 +263,24 @@ export default function AdminDashboard() {
                   </div>
                   <p className="text-sm text-primary font-semibold">
                     Manage users
+                  </p>
+                </div>
+              </Link>
+
+              {/* Reports */}
+              <Link href="/admin/reports">
+                <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
+                      <LineChart className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">Reports & Analytics</h3>
+                      <p className="text-sm text-muted-foreground">View platform reports</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-primary font-semibold">
+                    View reports
                   </p>
                 </div>
               </Link>

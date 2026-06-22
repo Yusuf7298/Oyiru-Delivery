@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { categories_oyru, products } from '@/lib/db/schema'
+import { categories_oyru, products, hotelAccounts, oyruOrders, oyruOrderItems } from '@/lib/db/schema'
 
 async function seed() {
   try {
@@ -8,6 +8,7 @@ async function seed() {
     // Clear existing data
     await db.delete(products)
     await db.delete(categories_oyru)
+    await db.delete(hotelAccounts)
 
     // Create categories
     const categoryIds = [
@@ -73,6 +74,41 @@ async function seed() {
     }
 
     console.log('✓ Products created')
+
+    // Create hotel accounts
+    const hotelIds = ['hotel-1', 'hotel-2', 'hotel-3']
+    const hotels_data = [
+      {
+        id: hotelIds[0],
+        companyName: 'Grand Palace Hotel',
+        contactPerson: 'Rajesh Kumar',
+        email: 'orders@grandpalace.com',
+        phone: '9876543210',
+        billingType: 'INVOICE',
+      },
+      {
+        id: hotelIds[1],
+        companyName: 'Sunrise Resort',
+        contactPerson: 'Priya Singh',
+        email: 'procurement@sunriseresort.com',
+        phone: '9876543211',
+        billingType: 'INVOICE',
+      },
+      {
+        id: hotelIds[2],
+        companyName: 'Metro Business Hotel',
+        contactPerson: 'Amit Patel',
+        email: 'admin@metroholel.com',
+        phone: '9876543212',
+        billingType: 'COD',
+      },
+    ]
+
+    for (const hotel of hotels_data) {
+      await db.insert(hotelAccounts).values(hotel)
+    }
+
+    console.log('✓ Hotel accounts created')
     console.log('\nDatabase seeded successfully!')
   } catch (error) {
     console.error('Seeding failed:', error)
