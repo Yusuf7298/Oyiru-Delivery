@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCart } from '@/lib/contexts/cart-context'
 import { auth } from '@/lib/auth'
-import { createOrder } from '@/app/actions/orders'
+import { createProductOrder } from '@/app/actions/product-orders'
 import { Button } from '@/components/ui/button'
 
 export default function CheckoutPage() {
@@ -113,13 +113,13 @@ export default function CheckoutPage() {
         specialInstructions: formData.specialInstructions,
       }
 
-      const result = await createOrder(orderData)
+      const result = await createProductOrder(orderData)
 
       if (result.success) {
         clearCart()
-        router.push(`/orders/${result.orderId}`)
+        router.push(`/order-confirmation/${result.orderId}`)
       } else {
-        alert('Failed to place order: ' + result.error)
+        alert('Failed to place order: ' + result.message)
       }
     } catch (error) {
       console.error('Error placing order:', error)
