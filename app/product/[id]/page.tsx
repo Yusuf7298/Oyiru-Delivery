@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ShoppingCart, ArrowLeft, Minus, Plus } from 'lucide-react'
+import { useCart } from '@/lib/contexts/cart-context'
 
 interface Product {
   id: string
@@ -17,6 +18,7 @@ interface Product {
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
+  const { addToCart } = useCart()
   const [product, setProduct] = useState<Product | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
@@ -58,25 +60,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const handleAddToCart = () => {
     if (!product) return
 
-    // Get existing cart from localStorage
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
-
-    // Check if product already in cart
-    const existingItem = cart.find((item: any) => item.id === product.id)
-
-    if (existingItem) {
-      existingItem.quantity += quantity
-    } else {
-      cart.push({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        quantity,
-        image: product.image,
-      })
-    }
-
-    localStorage.setItem('cart', JSON.stringify(cart))
+    // Add to cart using the context
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: parseFloat(product.price || '0'),
+      quantity,
+      image: product.image,
+      categoryId: product.categoryId,
+    })
     setAddedToCart(true)
 
     setTimeout(() => {

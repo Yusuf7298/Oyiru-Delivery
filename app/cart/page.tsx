@@ -6,8 +6,9 @@ import { ArrowLeft, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, clearCart, total } = useCart()
+  const { cart, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCart()
   const [isHydrated, setIsHydrated] = useState(false)
+  const total = getCartTotal()
 
   useEffect(() => {
     setIsHydrated(true)
