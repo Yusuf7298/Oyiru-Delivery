@@ -55,7 +55,7 @@ export default function CheckoutPage() {
     )
   }
 
-  if (!cart.restaurantId || cart.items.length === 0) {
+  if (!cart.items || cart.items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border bg-card">
@@ -105,7 +105,6 @@ export default function CheckoutPage() {
     try {
       const totalAmount = getCartTotal()
       const orderData = {
-        restaurantId: cart.restaurantId!,
         items: cart.items,
         totalAmount,
         deliveryAddress: formData.deliveryAddress,
@@ -156,11 +155,11 @@ export default function CheckoutPage() {
               <div className="space-y-3 mb-6 pb-6 border-b border-border">
                 {cart.items.map((item) => (
                   <div
-                    key={item.dishId}
+                    key={item.productId}
                     className="flex items-center justify-between text-sm"
                   >
                     <span>
-                      {item.dishName} x{item.quantity}
+                      {item.name} x{item.quantity}
                     </span>
                     <span className="font-semibold">
                       ${(item.price * item.quantity).toFixed(2)}
