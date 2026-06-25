@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCart } from '@/lib/contexts/cart-context'
-import { auth } from '@/lib/auth'
 import { createProductOrder } from '@/app/actions/product-orders'
 import { Button } from '@/components/ui/button'
 
@@ -30,6 +29,11 @@ export default function CheckoutPage() {
         })
         if (response.ok) {
           const session = await response.json()
+          // Better Auth returns 200 with a null body when there is no session.
+          if (!session?.user) {
+            router.push('/sign-in')
+            return
+          }
           setUser(session.user)
           setFormData((prev) => ({
             ...prev,

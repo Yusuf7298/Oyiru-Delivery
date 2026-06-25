@@ -7,6 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
     "seed": "node --env-file-if-exists=/vercel/share/.env.project -r tsx scripts/seed.ts",
     "generate-test-users": "node --env-file-if-exists=/vercel/share/.env.project -r tsx scripts/generate-test-users.ts"
   },
@@ -40,6 +44,7 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
     "postcss": "^8.5",
     "tailwindcss": "^4.2.0",
     "tsx": "^4.22.4",

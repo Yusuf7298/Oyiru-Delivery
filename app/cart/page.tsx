@@ -95,7 +95,7 @@ export default function CartPage() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-foreground text-lg">{item.name}</h3>
                     <p className="text-primary font-bold text-lg mt-2">
-                      ₹{(item.price * item.quantity).toFixed(2)}
+                      {(item.price * item.quantity).toFixed(2)} Birr
                     </p>
                   </div>
 
@@ -151,15 +151,15 @@ export default function CartPage() {
               <div className="space-y-3 mb-6 pb-6 border-b border-border">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold">₹{total.toFixed(2)}</span>
+                  <span className="font-semibold">{total.toFixed(2)} Birr</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Delivery Fee</span>
-                  <span className="font-semibold">₹0.00</span>
+                  <span className="font-semibold">0.00 Birr</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax</span>
-                  <span className="font-semibold">₹0.00</span>
+                  <span className="font-semibold">0.00 Birr</span>
                 </div>
               </div>
 
@@ -167,7 +167,7 @@ export default function CartPage() {
               <div className="mb-6 flex justify-between items-center">
                 <span className="font-bold text-foreground">Total</span>
                 <span className="text-2xl font-bold text-primary">
-                  ₹{total.toFixed(2)}
+                  {total.toFixed(2)} Birr
                 </span>
               </div>
 

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image';
 import { useEffect, useState } from 'react'
 import { ShoppingCart, MapPin, Clock, Zap } from 'lucide-react'
 
@@ -67,7 +68,12 @@ export default function HomePage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">Oy</span>
+                <Image 
+                 src="/logo.jpg" 
+                 alt="Logo" 
+                 width={32} 
+                 height={32} 
+                 className="rounded-lg"/>
               </div>
               <span className="font-bold text-lg hidden sm:inline">Oyru</span>
             </div>
@@ -196,7 +202,7 @@ export default function HomePage() {
                         )}
                         <div className="flex items-center justify-between mt-3">
                           <span className="font-bold text-lg text-primary">
-                            ₹{Number(product.price).toFixed(2)}
+                            {Number(product.price).toFixed(2)} Birr
                           </span>
                           <button className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
                             <ShoppingCart className="w-4 h-4" />

@@ -280,7 +280,7 @@ export const dailyAnalytics = pgTable('daily_analytics', {
 export const paymentMethodEnum = pgEnum('payment_method', ['COD', 'INVOICE'])
 export const deliveryStatusEnum = pgEnum('delivery_status', ['assigned', 'picked_up', 'in_transit', 'delivered'])
 
-export const categories_oyru = pgTable('categories', {
+export const categories_oyru = pgTable('oyru_categories', {
   id: text('id').primaryKey(),
   name: text('name').notNull().unique(),
   image: text('image'),
@@ -342,7 +342,7 @@ export const cartItems = pgTable('cart_items', {
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
 
-export const oyruOrders = pgTable('orders', {
+export const oyruOrders = pgTable('oyru_orders', {
   id: text('id').primaryKey(),
   userId: text('userId').references(() => user.id, { onDelete: 'cascade' }),
   hotelAccountId: text('hotelAccountId').references(() => hotelAccounts.id, { onDelete: 'cascade' }),
@@ -356,7 +356,7 @@ export const oyruOrders = pgTable('orders', {
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
 
-export const oyruOrderItems = pgTable('order_items', {
+export const oyruOrderItems = pgTable('oyru_order_items', {
   id: text('id').primaryKey(),
   orderId: text('orderId').notNull().references(() => oyruOrders.id, { onDelete: 'cascade' }),
   productId: text('productId').notNull().references(() => products.id, { onDelete: 'cascade' }),

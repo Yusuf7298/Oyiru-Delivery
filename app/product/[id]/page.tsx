@@ -153,7 +153,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="border-t border-b border-border py-4">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-primary">
-                  ₹{Number(product.price).toFixed(2)}
+                  {Number(product.price).toFixed(2)} Birr
                 </span>
                 {product.stock !== undefined && (
                   <span className="text-sm text-muted-foreground">
