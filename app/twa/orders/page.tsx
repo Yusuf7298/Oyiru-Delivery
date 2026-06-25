@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/notifications'
 import { OrderHistorySkeleton } from '@/components/skeletons'
 
 export default function TelegramOrders() {
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -65,13 +65,12 @@ export default function TelegramOrders() {
                     </p>
                   </div>
                   <span
-                    className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      order.status === 'delivered'
+                    className={`text-xs font-semibold px-2 py-1 rounded-full ${order.status === 'delivered'
                         ? 'bg-green-50 text-green-700'
                         : order.status === 'cancelled'
                           ? 'bg-red-50 text-red-700'
                           : 'bg-blue-50 text-blue-700'
-                    }`}
+                      }`}
                   >
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>

@@ -24,7 +24,7 @@ const statusColors: Record<string, string> = {
 export default function TelegramProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -113,9 +113,8 @@ export default function TelegramProfilePage() {
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-semibold">Order #{order.id.slice(0, 8)}</span>
                         <span
-                          className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                            statusColors[order.status] || 'bg-gray-100'
-                          }`}
+                          className={`px-2 py-0.5 rounded text-xs font-semibold ${statusColors[order.status] || 'bg-gray-100'
+                            }`}
                         >
                           {order.status.replace('_', ' ')}
                         </span>

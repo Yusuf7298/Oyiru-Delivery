@@ -9,7 +9,7 @@ import { useCart } from '@/lib/contexts/cart-context'
 interface Product {
   id: string
   name: string
-  price: number | string
+  price: string
   description?: string
   categoryId?: string
   stock?: number
@@ -40,7 +40,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       try {
         setIsLoading(true)
         const res = await fetch(`/api/products/${productId}`)
-        
+
         if (!res.ok) {
           throw new Error('Product not found')
         }

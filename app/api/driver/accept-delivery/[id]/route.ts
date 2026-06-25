@@ -6,7 +6,7 @@ import { headers } from 'next/headers'
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() })
@@ -15,7 +15,7 @@ export async function POST(
     }
 
     const driverId = session.user.id
-    const orderId = params.id
+    const orderId = (await params).id
 
     // Create delivery record
     const newDelivery = await db

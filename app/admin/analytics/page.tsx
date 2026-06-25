@@ -8,7 +8,7 @@ import { ChevronLeft, TrendingUp, TrendingDown, Calendar } from 'lucide-react'
 
 export default function AdminAnalyticsPage() {
   const [stats, setStats] = useState<any>(null)
-  const [analyticsData, setAnalyticsData] = useState([])
+  const [analyticsData, setAnalyticsData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [days, setDays] = useState(30)
 
@@ -99,7 +99,7 @@ export default function AdminAnalyticsPage() {
             {/* Daily Breakdown */}
             <div className="bg-card rounded-lg border border-border p-6">
               <h2 className="text-xl font-bold mb-6">Daily Performance</h2>
-              
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-secondary/30">

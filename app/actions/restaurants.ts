@@ -41,16 +41,14 @@ export async function fetchRestaurantCategories(restaurantId: string) {
  * Fetch all dishes for a restaurant (optionally filtered by category)
  */
 export async function fetchRestaurantDishes(restaurantId: string, categoryId?: string) {
-  let query = db
+  const conditions = categoryId
+    ? and(eq(dishes.restaurantId, restaurantId), eq(dishes.categoryId, categoryId))
+    : eq(dishes.restaurantId, restaurantId)
+
+  return db
     .select()
     .from(dishes)
-    .where(eq(dishes.restaurantId, restaurantId))
-
-  if (categoryId) {
-    query = query.where(eq(dishes.categoryId, categoryId))
-  }
-
-  return query
+    .where(conditions)
 }
 
 /**

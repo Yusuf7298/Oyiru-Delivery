@@ -369,7 +369,7 @@ export const oyruOrderItems = pgTable('order_items', {
 export const deliveries = pgTable('deliveries', {
   id: text('id').primaryKey(),
   orderId: text('orderId').notNull().unique().references(() => oyruOrders.id, { onDelete: 'cascade' }),
-  driverId: text('driverId').references(() => user.id, { onDelete: 'setNull' }),
+  driverId: text('driverId').references(() => user.id, { onDelete: 'set null' }),
   status: deliveryStatusEnum('status').default('assigned'),
   pickupTime: timestamp('pickupTime'),
   deliveryTime: timestamp('deliveryTime'),

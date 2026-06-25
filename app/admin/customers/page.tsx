@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronLeft, Search, Mail, Phone, MapPin, User } from 'lucide-react'
 
 export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState([])
+  const [customers, setCustomers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)

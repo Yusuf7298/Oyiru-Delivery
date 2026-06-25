@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { products } from '@/lib/db/schema'
-import { v4 as uuidv4 } from 'crypto'
+import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: Request) {
   try {

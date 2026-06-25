@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 
 function SearchContent() {
   const searchParams = useSearchParams()
-  const [restaurants, setRestaurants] = useState([])
+  const [restaurants, setRestaurants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [searching, setSearching] = useState(false)

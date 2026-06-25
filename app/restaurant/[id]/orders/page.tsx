@@ -24,7 +24,7 @@ export default function RestaurantOrdersPage() {
   const params = useParams()
   const restaurantId = params.id as string
 
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
 
@@ -92,9 +92,8 @@ export default function RestaurantOrdersPage() {
                       ${parseFloat(order.totalAmount).toFixed(2)}
                     </div>
                     <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-semibold mt-1 ${
-                        statusColors[order.status] || 'bg-gray-100'
-                      }`}
+                      className={`inline-block px-3 py-1 rounded-full text-sm font-semibold mt-1 ${statusColors[order.status] || 'bg-gray-100'
+                        }`}
                     >
                       {order.status.replace('_', ' ').toUpperCase()}
                     </span>
@@ -126,15 +125,14 @@ export default function RestaurantOrdersPage() {
                           key={status}
                           onClick={() => isNextStatus && handleStatusUpdate(order.id, status)}
                           disabled={!isNextStatus || updating === order.id}
-                          className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                            isCurrentStatus
+                          className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${isCurrentStatus
                               ? 'bg-primary text-white'
                               : isPastStatus
-                              ? 'bg-green-100 text-green-800 cursor-default'
-                              : isNextStatus
-                              ? 'bg-secondary hover:bg-secondary/80 cursor-pointer'
-                              : 'bg-muted text-muted-foreground cursor-default'
-                          } ${updating === order.id ? 'opacity-50' : ''}`}
+                                ? 'bg-green-100 text-green-800 cursor-default'
+                                : isNextStatus
+                                  ? 'bg-secondary hover:bg-secondary/80 cursor-pointer'
+                                  : 'bg-muted text-muted-foreground cursor-default'
+                            } ${updating === order.id ? 'opacity-50' : ''}`}
                         >
                           {status.replace('_', ' ')}
                         </button>

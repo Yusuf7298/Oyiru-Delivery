@@ -16,10 +16,10 @@ export async function getPlatformStats() {
 
     // Get hotels
     const allHotels = await db.select().from(hotelAccounts)
-    
+
     // Get products
     const allProducts = await db.select().from(products)
-    const lowStockProducts = allProducts.filter(p => parseInt(p.stock || '0') < 10).length
+    const lowStockProducts = allProducts.filter(p => p.stockQuantity < 10).length
 
     const stats = {
       totalOrders: ordersCount,

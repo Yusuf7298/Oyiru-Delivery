@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronLeft, Search, Phone, Truck, Star } from 'lucide-react'
 
 export default function AdminDeliveryPartnersPage() {
-  const [partners, setPartners] = useState([])
+  const [partners, setPartners] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
@@ -91,11 +91,10 @@ export default function AdminDeliveryPartnersPage() {
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-bold">
                     <Truck className="w-6 h-6" />
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                    partner.isActive
+                  <span className={`text-xs px-2 py-1 rounded-full font-semibold ${partner.isActive
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
-                  }`}>
+                    }`}>
                     {partner.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>

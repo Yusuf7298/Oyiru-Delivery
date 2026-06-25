@@ -2,7 +2,8 @@ import { db } from '@/lib/db'
 import { oyruOrders, oyruOrderItems } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
-import { v4 as uuidv4 } from 'crypto'
+import { v4 as uuidv4 } from 'uuid'
+import { eq } from 'drizzle-orm'
 import { getAuthContext, requireAuth } from '@/lib/middleware/role-check'
 import { hasPermission } from '@/lib/utils/permissions'
 import { checkStockAvailability, decrementStock } from '@/lib/services/inventory'
@@ -95,7 +96,7 @@ export async function GET(request: Request) {
     const orders = await db
       .select()
       .from(oyruOrders)
-      .where((table) => table.userId === authContext.userId)
+      .where(eq(oyruOrders.userId, authContext.userId))
       .orderBy(oyruOrders.createdAt)
 
     return Response.json({ success: true, orders })

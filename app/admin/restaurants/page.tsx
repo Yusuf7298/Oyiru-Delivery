@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronLeft, Search, MapPin, Phone, AlertCircle } from 'lucide-react'
 
 export default function AdminRestaurantsPage() {
-  const [restaurants, setRestaurants] = useState([])
+  const [restaurants, setRestaurants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
@@ -110,11 +110,10 @@ export default function AdminRestaurantsPage() {
                       <td className="px-6 py-4 text-sm">{restaurant.deliveryTime || 30} min</td>
                       <td className="px-6 py-4 text-sm font-semibold">${restaurant.deliveryFee || 0}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          restaurant.isActive
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${restaurant.isActive
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
-                        }`}>
+                          }`}>
                           {restaurant.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>

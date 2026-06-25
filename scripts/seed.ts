@@ -69,7 +69,7 @@ async function seed() {
     for (const prod of products_data) {
       await db.insert(products).values({
         ...prod,
-        isAvailable: true,
+        price: prod.price.toString(),
       })
     }
 

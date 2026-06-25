@@ -5,8 +5,6 @@ import Link from 'next/link'
 import {
   getPlatformStats,
   getAllOrders,
-  getAllRestaurants,
-  getAllDeliveryPartners,
 } from '@/app/actions/admin'
 import { Button } from '@/components/ui/button'
 import { BarChart3, Store, Truck, ShoppingCart, DollarSign, Users, LineChart } from 'lucide-react'

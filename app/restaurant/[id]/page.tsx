@@ -12,14 +12,13 @@ export default function RestaurantPage() {
   const params = useParams()
   const router = useRouter()
   const restaurantId = params.id as string
-  const { addToCart, cart, getItemCount } = useCart()
+  const { addToCart, updateQuantity, cart, getItemCount } = useCart()
 
   const [restaurant, setRestaurant] = useState<any>(null)
-  const [categories, setCategories] = useState([])
-  const [dishes, setDishes] = useState([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [dishes, setDishes] = useState<any[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showAddedNotification, setShowAddedNotification] = useState<string | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -55,58 +54,13 @@ export default function RestaurantPage() {
     setDishes(dishesData)
   }
 
-  const handleAddToCart = (dishId: string) => {
-    const newCart = new Map(cart)
-    newCart.set(dishId, (newCart.get(dishId) || 0) + 1)
-    setCart(newCart)
-  }
-
-  const handleRemoveFromCart = (dishId: string) => {
-    const newCart = new Map(cart)
-    const quantity = newCart.get(dishId) || 0
-    if (quantity > 1) {
-      newCart.set(dishId, quantity - 1)
-    } else {
-      newCart.delete(dishId)
-    }
-    setCart(newCart)
+  const getItemQuantity = (dishId: string): number => {
+    const item = cart.items.find(i => i.productId === dishId)
+    return item ? item.quantity : 0
   }
 
   const getTotalPrice = () => {
-    let total = 0
-    for (const [dishId, quantity] of cart.entries()) {
-      const dish = dishes.find((d: any) => d.id === dishId)
-      if (dish) {
-        total += parseFloat(dish.price) * quantity
-      }
-    }
-    return total
-  }
-
-  const handleCheckout = async () => {
-    if (cart.size === 0) {
-      alert('Please add items to your cart')
-      return
-    }
-
-    const items = Array.from(cart.entries()).map(([dishId, quantity]) => ({
-      dishId,
-      quantity,
-    }))
-
-    try {
-      await createOrder({
-        restaurantId,
-        items,
-        deliveryAddress: '123 Main St',
-        deliveryCity: 'City',
-      })
-      setCart(new Map())
-      router.push('/orders')
-    } catch (error) {
-      console.error('Error creating order:', error)
-      alert('Error placing order')
-    }
+    return cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   }
 
   if (loading) {
@@ -132,34 +86,34 @@ export default function RestaurantPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg text-muted-foreground mb-4">Restaurant not found</p>
-          <Link href="/">
-            <Button>Back to Home</Button>
-          </Link>
+          <Link href="/"><Button>Back to Home</Button></Link>
         </div>
       </div>
     )
   }
 
+  const itemCount = getItemCount()
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:text-primary transition-colors">
             <ArrowLeft className="w-5 h-5" />
             <span>Back</span>
           </Link>
-          {cart.size > 0 && (
-            <div className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full">
-              <ShoppingCart className="w-4 h-4" />
-              <span className="font-semibold">{cart.size}</span>
-            </div>
+          {itemCount > 0 && (
+            <Link href="/cart">
+              <div className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full">
+                <ShoppingCart className="w-4 h-4" />
+                <span className="font-semibold">{itemCount}</span>
+              </div>
+            </Link>
           )}
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Restaurant Info */}
         <div className="mb-8">
           <div className="bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg p-8 mb-6">
             <h1 className="text-4xl font-bold mb-2">{restaurant.name}</h1>
@@ -169,31 +123,24 @@ export default function RestaurantPage() {
                 <span className="text-primary font-semibold">{restaurant.deliveryTime || 30}</span>
                 <span className="text-muted-foreground">min delivery</span>
               </span>
-              <span className="text-muted-foreground">
-                Delivery Fee: ${restaurant.deliveryFee || 0}
-              </span>
-              <span className="text-muted-foreground">
-                Min Order: ${restaurant.minOrderAmount || 0}
-              </span>
+              <span className="text-muted-foreground">Delivery Fee: ${restaurant.deliveryFee || 0}</span>
+              <span className="text-muted-foreground">Min Order: ${restaurant.minOrderAmount || 0}</span>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Menu */}
           <div className="lg:col-span-2">
-            {/* Categories */}
             {categories.length > 0 && (
               <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
                 {categories.map((category: any) => (
                   <button
                     key={category.id}
                     onClick={() => handleCategoryChange(category.id)}
-                    className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
-                      selectedCategory === category.id
+                    className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${selectedCategory === category.id
                         ? 'bg-primary text-white'
                         : 'bg-secondary text-foreground hover:bg-secondary/80'
-                    }`}
+                      }`}
                   >
                     {category.name}
                   </button>
@@ -201,73 +148,59 @@ export default function RestaurantPage() {
               </div>
             )}
 
-            {/* Dishes */}
             <div className="grid gap-4">
-              {dishes.map((dish: any) => (
-                <div
-                  key={dish.id}
-                  className="bg-card border border-border rounded-lg p-4 flex justify-between items-start gap-4"
-                >
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1">{dish.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-3">{dish.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-primary">${dish.price}</span>
-                      {dish.preparationTime && (
-                        <span className="text-xs text-muted-foreground">
-                          {dish.preparationTime} min prep
-                        </span>
+              {dishes.map((dish: any) => {
+                const qty = getItemQuantity(dish.id)
+                return (
+                  <div key={dish.id} className="bg-card border border-border rounded-lg p-4 flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg mb-1">{dish.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">{dish.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-primary">${dish.price}</span>
+                        {dish.preparationTime && (
+                          <span className="text-xs text-muted-foreground">{dish.preparationTime} min prep</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {qty > 0 && (
+                        <button
+                          onClick={() => updateQuantity(dish.id, qty - 1)}
+                          className="px-2 py-1 bg-secondary rounded hover:bg-secondary/80"
+                        >
+                          −
+                        </button>
                       )}
+                      {qty > 0 && <span className="px-2 font-semibold">{qty}</span>}
+                      <button
+                        onClick={() => addToCart({ productId: dish.id, name: dish.name, price: parseFloat(dish.price), image: dish.imageUrl })}
+                        className="px-3 py-1 bg-primary text-white rounded hover:bg-primary/90 transition-colors"
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {cart.has(dish.id) && (
-                      <button
-                        onClick={() => handleRemoveFromCart(dish.id)}
-                        className="px-2 py-1 bg-secondary rounded hover:bg-secondary/80"
-                      >
-                        −
-                      </button>
-                    )}
-                    {cart.has(dish.id) && (
-                      <span className="px-2 font-semibold">{cart.get(dish.id)}</span>
-                    )}
-                    <button
-                      onClick={() => handleAddToCart(dish.id)}
-                      className="px-3 py-1 bg-primary text-white rounded hover:bg-primary/90 transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
-          {/* Cart Summary */}
           <div className="lg:col-span-1">
             <div className="bg-card border border-border rounded-lg p-6 sticky top-20">
               <h2 className="font-bold text-xl mb-6">Order Summary</h2>
-
-              {cart.size === 0 ? (
+              {cart.items.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">Your cart is empty</p>
               ) : (
                 <>
                   <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
-                    {Array.from(cart.entries()).map(([dishId, quantity]) => {
-                      const dish = dishes.find((d: any) => d.id === dishId)
-                      if (!dish) return null
-                      return (
-                        <div key={dishId} className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {dish.name} x{quantity}
-                          </span>
-                          <span className="font-semibold">${(parseFloat(dish.price) * quantity).toFixed(2)}</span>
-                        </div>
-                      )
-                    })}
+                    {cart.items.map((item) => (
+                      <div key={item.productId} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{item.name} x{item.quantity}</span>
+                        <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
                   </div>
-
                   <div className="border-t border-border pt-4 mb-6">
                     <div className="flex justify-between mb-2">
                       <span className="text-muted-foreground">Subtotal</span>
@@ -279,15 +212,12 @@ export default function RestaurantPage() {
                     </div>
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span className="text-primary">
-                        ${(getTotalPrice() + (parseFloat(restaurant.deliveryFee) || 0)).toFixed(2)}
-                      </span>
+                      <span className="text-primary">${(getTotalPrice() + (parseFloat(restaurant.deliveryFee) || 0)).toFixed(2)}</span>
                     </div>
                   </div>
-
-                  <Button onClick={handleCheckout} className="w-full">
-                    Place Order
-                  </Button>
+                  <Link href="/checkout">
+                    <Button className="w-full">Proceed to Checkout</Button>
+                  </Link>
                 </>
               )}
             </div>

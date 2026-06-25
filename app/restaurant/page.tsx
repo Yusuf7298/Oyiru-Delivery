@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, BarChart3, UtensilsCrossed } from 'lucide-react'
 
 export default function RestaurantDashboard() {
-  const [restaurants, setRestaurants] = useState([])
+  const [restaurants, setRestaurants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -83,11 +83,10 @@ export default function RestaurantDashboard() {
                     </p>
                   </div>
                   <div
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      restaurant.isActive
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${restaurant.isActive
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
-                    }`}
+                      }`}
                   >
                     {restaurant.isActive ? 'Active' : 'Inactive'}
                   </div>

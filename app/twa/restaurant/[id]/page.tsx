@@ -16,8 +16,8 @@ export default function TelegramRestaurantPage() {
   const restaurantId = params.id as string
 
   const [restaurant, setRestaurant] = useState<any>(null)
-  const [categories, setCategories] = useState([])
-  const [dishes, setDishes] = useState([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [dishes, setDishes] = useState<any[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [cart, setCart] = useState<Map<string, number>>(new Map())
   const [loading, setLoading] = useState(true)
@@ -170,11 +170,10 @@ export default function TelegramRestaurantPage() {
               <button
                 key={category.id}
                 onClick={() => handleCategoryChange(category.id)}
-                className={`px-3 py-1 rounded-full whitespace-nowrap text-sm transition-colors ${
-                  selectedCategory === category.id
+                className={`px-3 py-1 rounded-full whitespace-nowrap text-sm transition-colors ${selectedCategory === category.id
                     ? 'bg-primary text-white'
                     : 'bg-secondary text-foreground'
-                }`}
+                  }`}
               >
                 {category.name}
               </button>

@@ -18,7 +18,7 @@ const statusColors: Record<string, string> = {
 }
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
 
@@ -118,9 +118,8 @@ export default function OrdersPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <p
-                  className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                    statusColors[selectedOrder.status] || 'bg-gray-100'
-                  }`}
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${statusColors[selectedOrder.status] || 'bg-gray-100'
+                    }`}
                 >
                   {selectedOrder.status.replace('_', ' ').toUpperCase()}
                 </p>

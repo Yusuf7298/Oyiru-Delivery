@@ -33,7 +33,7 @@ interface Stats {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
-  const [recentOrders, setRecentOrders] = useState([])
+  const [recentOrders, setRecentOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -211,9 +211,8 @@ function NavItem({ icon: Icon, label, href, active }: any) {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-        active ? 'bg-primary text-white' : 'hover:bg-secondary text-foreground'
-      }`}
+      className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${active ? 'bg-primary text-white' : 'hover:bg-secondary text-foreground'
+        }`}
     >
       <Icon className="w-5 h-5" />
       <span className="text-sm font-medium">{label}</span>

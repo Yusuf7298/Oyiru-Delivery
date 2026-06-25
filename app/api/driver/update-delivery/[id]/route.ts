@@ -6,7 +6,7 @@ import { headers } from 'next/headers'
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() })
@@ -15,7 +15,7 @@ export async function PATCH(
     }
 
     const { status } = await req.json()
-    const deliveryId = params.id
+    const deliveryId = (await params).id
 
     const updates: any = { status }
 

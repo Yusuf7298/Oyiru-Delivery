@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { deliveryPartners, orders } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, isNull } from 'drizzle-orm'
 import { getUserId } from '@/lib/auth-utils'
 
 /**
@@ -81,7 +81,7 @@ export async function getAvailableOrders() {
     .from(orders)
     .where(and(
       eq(orders.status, 'ready' as any),
-      eq(orders.deliveryPartnerId, null)
+      isNull(orders.deliveryPartnerId)
     ))
 }
 
@@ -107,7 +107,7 @@ export async function acceptDeliveryOrder(orderId: string) {
       deliveryPartnerId: partner[0].id,
       status: 'in_transit' as any,
     })
-    .where(and(eq(orders.id, orderId), eq(orders.deliveryPartnerId, null)))
+    .where(and(eq(orders.id, orderId), isNull(orders.deliveryPartnerId)))
     .returning()
 
   if (!updated.length) throw new Error('Order not available')

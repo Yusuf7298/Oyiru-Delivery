@@ -10,7 +10,7 @@ import { ShoppingCart, Home, User } from 'lucide-react'
 const WebApp = typeof window !== 'undefined' ? require('@twa-dev/sdk').default : null
 
 export default function TelegramHome() {
-  const [restaurants, setRestaurants] = useState([])
+  const [restaurants, setRestaurants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const { getItemCount } = useCart()
 

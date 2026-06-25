@@ -46,7 +46,14 @@ export async function updateUserProfile(data: {
   if (existingProfile.length) {
     const updated = await db
       .update(usersProfile)
-      .set(data)
+      .set({
+        ...(data.role ? { role: data.role as 'customer' | 'restaurant_owner' | 'delivery_partner' | 'admin' | 'super_admin' } : {}),
+        phoneNumber: data.phoneNumber,
+        address: data.address,
+        city: data.city,
+        zipCode: data.zipCode,
+        profileImageUrl: data.profileImageUrl,
+      })
       .where(eq(usersProfile.userId, userId))
       .returning()
 
@@ -54,12 +61,13 @@ export async function updateUserProfile(data: {
   } else {
     // Create new profile
     const profileId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const validRole = (data.role === 'restaurant_owner' || data.role === 'delivery_partner' || data.role === 'admin' || data.role === 'super_admin') ? data.role : 'customer';
     const [newProfile] = await db
       .insert(usersProfile)
       .values({
         id: profileId,
         userId,
-        role: data.role || 'customer',
+        role: validRole as 'customer' | 'restaurant_owner' | 'delivery_partner' | 'admin' | 'super_admin',
         phoneNumber: data.phoneNumber,
         address: data.address,
         city: data.city,

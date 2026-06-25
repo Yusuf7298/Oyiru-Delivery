@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { products, inventoryLogs } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, lte } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 
 export const LOW_STOCK_THRESHOLD = 10
@@ -121,7 +121,7 @@ export async function getLowStockProducts(): Promise<{ productId: string; quanti
     const lowStockProducts = await db
       .select({ id: products.id, stockQuantity: products.stockQuantity })
       .from(products)
-      .where((product) => product.stockQuantity.lessOrEqual(LOW_STOCK_THRESHOLD))
+      .where(lte(products.stockQuantity, LOW_STOCK_THRESHOLD))
 
     return lowStockProducts.map((p) => ({
       productId: p.id,

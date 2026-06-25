@@ -4,7 +4,7 @@ import { getAuthContext, requireAuth } from '@/lib/middleware/role-check'
 import { canAccessOrderData } from '@/lib/utils/permissions'
 import { eq } from 'drizzle-orm'
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authContext = await getAuthContext()
 
@@ -15,7 +15,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const order = await db
       .select()
       .from(oyruOrders)
-      .where(eq(oyruOrders.id, params.id))
+      .where(eq(oyruOrders.id, (await params).id))
       .limit(1)
 
     if (!order.length) {
@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const items = await db
       .select()
       .from(oyruOrderItems)
-      .where(eq(oyruOrderItems.orderId, params.id))
+      .where(eq(oyruOrderItems.orderId, (await params).id))
 
     return Response.json({
       success: true,

@@ -12,8 +12,8 @@ import { MapPin, Package, DollarSign, Star, Navigation } from 'lucide-react'
 
 export default function DeliveryDashboard() {
   const [partner, setPartner] = useState<any>(null)
-  const [availableOrders, setAvailableOrders] = useState([])
-  const [activeOrders, setActiveOrders] = useState([])
+  const [availableOrders, setAvailableOrders] = useState<any[]>([])
+  const [activeOrders, setActiveOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'available' | 'active'>('available')
 
@@ -109,9 +109,8 @@ export default function DeliveryDashboard() {
                 <p className="text-sm text-muted-foreground mb-2">Current Status</p>
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-3 h-3 rounded-full ${
-                      partner.isActive ? 'bg-green-500' : 'bg-red-500'
-                    }`}
+                    className={`w-3 h-3 rounded-full ${partner.isActive ? 'bg-green-500' : 'bg-red-500'
+                      }`}
                   ></div>
                   <span className="font-semibold">
                     {partner.isActive ? 'Online' : 'Offline'}
@@ -126,21 +125,19 @@ export default function DeliveryDashboard() {
         <div className="mb-6 flex gap-2 border-b border-border">
           <button
             onClick={() => setTab('available')}
-            className={`px-4 py-2 font-semibold transition-colors ${
-              tab === 'available'
+            className={`px-4 py-2 font-semibold transition-colors ${tab === 'available'
                 ? 'border-b-2 border-primary text-primary'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
           >
             Available Orders ({availableOrders.length})
           </button>
           <button
             onClick={() => setTab('active')}
-            className={`px-4 py-2 font-semibold transition-colors ${
-              tab === 'active'
+            className={`px-4 py-2 font-semibold transition-colors ${tab === 'active'
                 ? 'border-b-2 border-primary text-primary'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
           >
             Active Deliveries ({activeOrders.length})
           </button>
