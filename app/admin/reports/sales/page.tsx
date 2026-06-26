@@ -46,14 +46,14 @@ export default function SalesReports() {
       ['Generated:', new Date().toISOString()],
       [],
       ['Metric', 'Value'],
-      ['Total Sales', `₹${report?.totalSales.toFixed(2)}`],
+      ['Total Sales', `${report?.totalSales.toFixed(2)} Birr`],
       ['Total Orders', report?.totalOrders],
       ['Total Customers', report?.totalCustomers],
-      ['Average Order Value', `₹${report?.averageOrderValue.toFixed(2)}`],
+      ['Average Order Value', `${report?.averageOrderValue.toFixed(2)} Birr`],
       [],
       ['Daily Sales'],
       ['Date', 'Sales', 'Orders'],
-      ...(report?.dailySales.map(d => [d.date, `₹${d.sales.toFixed(2)}`, d.orders]) || []),
+      ...(report?.dailySales.map(d => [d.date, `${d.sales.toFixed(2)} Birr`, d.orders]) || []),
     ]
       .map(row => row.join(','))
       .join('\n')
@@ -99,7 +99,7 @@ export default function SalesReports() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Total Sales</p>
-                    <p className="text-3xl font-bold text-foreground">₹{report.totalSales.toFixed(2)}</p>
+                    <p className="text-3xl font-bold text-foreground">{report.totalSales.toFixed(2)} Birr</p>
                   </div>
                   <div className="p-3 bg-emerald-100 rounded-lg">
                     <DollarSign className="w-6 h-6 text-emerald-600" />
@@ -135,7 +135,7 @@ export default function SalesReports() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Avg. Order Value</p>
-                    <p className="text-3xl font-bold text-foreground">₹{report.averageOrderValue.toFixed(2)}</p>
+                    <p className="text-3xl font-bold text-foreground">{report.averageOrderValue.toFixed(2)} Birr</p>
                   </div>
                   <div className="p-3 bg-amber-100 rounded-lg">
                     <TrendingUp className="w-6 h-6 text-amber-600" />
@@ -162,7 +162,7 @@ export default function SalesReports() {
                     {report.dailySales.map((row, idx) => (
                       <tr key={idx} className="border-b border-border hover:bg-muted/30 transition-colors">
                         <td className="px-6 py-4 text-sm text-foreground">{row.date}</td>
-                        <td className="px-6 py-4 text-sm font-bold text-primary">₹{row.sales.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-sm font-bold text-primary">{row.sales.toFixed(2)} Birr</td>
                         <td className="px-6 py-4 text-sm text-muted-foreground">{row.orders}</td>
                       </tr>
                     ))}

@@ -64,7 +64,7 @@ Order Invoice
 =============
 Order Number: ${order.orderNumber}
 Date: ${new Date(order.createdAt).toLocaleString()}
-Total Amount: ₹${Number(order.totalAmount).toFixed(2)}
+Total Amount: ${Number(order.totalAmount).toFixed(2)} Birr
 Payment Method: ${order.paymentMethod}
 Status: ${order.status}
 Delivery Address: ${order.deliveryAddress}
@@ -163,7 +163,7 @@ Delivery Address: ${order.deliveryAddress}
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary">
-                      ₹{Number(order.totalAmount).toFixed(2)}
+                      {Number(order.totalAmount).toFixed(2)} Birr
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {order.paymentMethod}
@@ -216,7 +216,7 @@ Delivery Address: ${order.deliveryAddress}
               <div>
                 <p className="text-sm text-muted-foreground">Total Amount</p>
                 <p className="font-semibold text-lg text-primary">
-                  ₹{Number(selectedOrder.totalAmount).toFixed(2)}
+                  {Number(selectedOrder.totalAmount).toFixed(2)} Birr
                 </p>
               </div>
               <div>
@@ -241,7 +241,7 @@ Delivery Address: ${order.deliveryAddress}
                         <div>
                           <p className="font-medium">Qty: {item.quantity}</p>
                         </div>
-                        <span>₹{Number(item.unitPrice).toFixed(2)} each</span>
+                        <span>{Number(item.unitPrice).toFixed(2)} Birr each</span>
                       </div>
                     ))}
                   </div>

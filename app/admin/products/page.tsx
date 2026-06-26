@@ -152,7 +152,7 @@ export default function ProductsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Price (₹)</label>
+                <label className="block text-sm font-medium mb-2">Price (Birr )</label>
                 <input
                   type="number"
                   step="0.01"
@@ -245,7 +245,7 @@ export default function ProductsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm">{getCategoryName(product.categoryId)}</td>
-                  <td className="px-6 py-4 font-semibold">₹{Number(product.price).toFixed(2)}</td>
+                  <td className="px-6 py-4 font-semibold">{Number(product.price).toFixed(2)} Birr</td>
                   <td className="px-6 py-4 text-sm">{product.stockQuantity} units</td>
                   <td className="px-6 py-4">
                     <span

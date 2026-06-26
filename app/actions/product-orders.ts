@@ -1,9 +1,10 @@
 'use server'
 
-import { db, pool } from '@/lib/db'
-import { products } from '@/lib/db/schema'
-import { eq, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { oyruOrders, oyruOrderItems, products } from '@/lib/db/schema'
+import { eq, desc } from 'drizzle-orm'
 import { getUserId } from '@/lib/auth-utils'
+import { v4 as uuidv4 } from 'uuid'
 
 interface ProductOrderItem {
   productId: string
@@ -13,7 +14,7 @@ interface ProductOrderItem {
 }
 
 /**
- * Create a new product-based order using the dedicated product_orders table
+ * Create a new product-based order using the oyruOrders table
  */
 export async function createProductOrder(data: {
   items: ProductOrderItem[]
@@ -33,13 +34,10 @@ export async function createProductOrder(data: {
     throw new Error('Order must contain at least one item')
   }
 
-  const client = await pool.connect()
-
   try {
-    await client.query('BEGIN')
-
     const timestamp = Date.now()
-    const orderId = `order_${timestamp}_${Math.random().toString(36).substring(2, 9)}`
+    const orderId = uuidv4()
+    const orderNumber = `ORD-${timestamp}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
     // Calculate order totals
     const subtotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -47,58 +45,47 @@ export async function createProductOrder(data: {
     const tax = Math.round((subtotal + deliveryFee) * 0.05 * 100) / 100
     const total = subtotal + deliveryFee + tax
 
-    console.log('[v0] Creating product order:', {
-      orderId,
-      customerId: userId,
-      items: data.items.length,
-      subtotal,
-      deliveryFee,
-      tax,
-      total,
+    const fullAddress = `${data.deliveryAddress}, ${data.deliveryCity}`
+    const notes = [
+      data.customerPhoneNumber ? `Phone: ${data.customerPhoneNumber}` : '',
+      data.specialInstructions ? `Notes: ${data.specialInstructions}` : ''
+    ].filter(Boolean).join(' | ')
+
+    // We can use a transaction, but simple successive inserts are fine too
+    await db.transaction(async (tx) => {
+      // Insert order
+      await tx.insert(oyruOrders).values({
+        id: orderId,
+        userId: userId,
+        orderNumber: orderNumber,
+        totalAmount: total.toString(),
+        deliveryAddress: fullAddress,
+        deliveryNotes: notes,
+        status: 'pending',
+      })
+
+      // Insert order items
+      for (const item of data.items) {
+        await tx.insert(oyruOrderItems).values({
+          id: uuidv4(),
+          orderId: orderId,
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.price.toString(),
+        })
+
+        // We don't necessarily need to reduce inventory dynamically right here if it's not strictly required,
+        // but if we do, we'd fetch the product and update it. Let's do a basic update.
+        const product = await tx.query.products.findFirst({
+          where: eq(products.id, item.productId)
+        })
+        if (product && product.stockQuantity >= item.quantity) {
+          await tx.update(products)
+            .set({ stockQuantity: product.stockQuantity - item.quantity })
+            .where(eq(products.id, item.productId))
+        }
+      }
     })
-
-    // Insert order into product_orders table
-    await client.query(
-      `INSERT INTO product_orders (id, "customerId", status, subtotal, "deliveryFee", tax, total, address, phone, "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())`,
-      [
-        orderId,
-        userId,
-        'pending',
-        subtotal,
-        deliveryFee,
-        tax,
-        total,
-        data.deliveryAddress,
-        data.customerPhoneNumber || '',
-      ]
-    )
-
-    console.log('[v0] Order created in product_orders table:', orderId)
-
-    // Insert order items and reduce inventory
-    for (const item of data.items) {
-      const itemId = `oi_${timestamp}_${Math.random().toString(36).substring(2, 9)}`
-      
-      await client.query(
-        `INSERT INTO product_order_items (id, "orderId", "productId", quantity, "unitPrice", "createdAt")
-         VALUES ($1, $2, $3, $4, $5, NOW())`,
-        [itemId, orderId, item.productId, item.quantity, item.price]
-      )
-
-      console.log(`[v0] Order item added: ${item.name} x${item.quantity}`)
-
-      // Reduce product inventory
-      await client.query(
-        `UPDATE products SET "stockQuantity" = "stockQuantity" - $1 WHERE id = $2`,
-        [item.quantity, item.productId]
-      )
-
-      console.log(`[v0] Inventory reduced for ${item.productId}`)
-    }
-
-    await client.query('COMMIT')
-    console.log('[v0] Order committed successfully:', orderId)
 
     return {
       success: true,
@@ -106,19 +93,16 @@ export async function createProductOrder(data: {
       message: 'Order created successfully',
     }
   } catch (error) {
-    await client.query('ROLLBACK')
-    console.error('[v0] Error creating product order:', error)
+    console.error('Error creating product order:', error)
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error',
     }
-  } finally {
-    client.release()
   }
 }
 
 /**
- * Get order details from product_orders table
+ * Get order details from oyruOrders table
  */
 export async function getProductOrder(orderId: string) {
   const userId = await getUserId()
@@ -127,39 +111,35 @@ export async function getProductOrder(orderId: string) {
     throw new Error('User must be authenticated')
   }
 
-  const client = await pool.connect()
-
   try {
-    // Get order
-    const orderResult = await client.query(
-      `SELECT * FROM product_orders WHERE id = $1 AND "customerId" = $2`,
-      [orderId, userId]
-    )
+    const order = await db.query.oyruOrders.findFirst({
+      where: eq(oyruOrders.id, orderId)
+    })
 
-    if (orderResult.rows.length === 0) {
+    if (!order || order.userId !== userId) {
       return null
     }
 
-    const order = orderResult.rows[0]
-
-    // Get order items
-    const itemsResult = await client.query(
-      `SELECT poi.*, p.name, p.image 
-       FROM product_order_items poi
-       JOIN products p ON poi."productId" = p.id
-       WHERE poi."orderId" = $1`,
-      [orderId]
-    )
+    const items = await db.select({
+      id: oyruOrderItems.id,
+      orderId: oyruOrderItems.orderId,
+      productId: oyruOrderItems.productId,
+      quantity: oyruOrderItems.quantity,
+      unitPrice: oyruOrderItems.unitPrice,
+      name: products.name,
+      image: products.image
+    })
+    .from(oyruOrderItems)
+    .innerJoin(products, eq(oyruOrderItems.productId, products.id))
+    .where(eq(oyruOrderItems.orderId, orderId))
 
     return {
       ...order,
-      items: itemsResult.rows,
+      items,
     }
   } catch (error) {
-    console.error('[v0] Error fetching order:', error)
+    console.error('Error fetching order:', error)
     return null
-  } finally {
-    client.release()
   }
 }
 
@@ -173,19 +153,15 @@ export async function getUserProductOrders() {
     throw new Error('User must be authenticated')
   }
 
-  const client = await pool.connect()
-
   try {
-    const result = await client.query(
-      `SELECT * FROM product_orders WHERE "customerId" = $1 ORDER BY "createdAt" DESC`,
-      [userId]
-    )
+    const orders = await db.query.oyruOrders.findMany({
+      where: eq(oyruOrders.userId, userId),
+      orderBy: [desc(oyruOrders.createdAt)]
+    })
 
-    return result.rows
+    return orders
   } catch (error) {
-    console.error('[v0] Error fetching user orders:', error)
+    console.error('Error fetching user orders:', error)
     return []
-  } finally {
-    client.release()
   }
 }

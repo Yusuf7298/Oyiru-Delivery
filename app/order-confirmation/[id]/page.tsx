@@ -11,21 +11,19 @@ interface OrderConfirmationProps {
 
 interface OrderData {
   id: string
-  customerId: string
+  userId: string
+  orderNumber: string
+  totalAmount: string
+  deliveryAddress: string
+  deliveryNotes: string | null
   status: string
-  subtotal: number
-  deliveryFee: number
-  tax: number
-  total: number
-  address: string
-  phone: string
   createdAt: string
   items?: Array<{
     id: string
     orderId: string
     productId: string
     quantity: number
-    unitPrice: number
+    unitPrice: string | number
     name: string
     image?: string
   }>
@@ -42,7 +40,7 @@ export default function OrderConfirmation({ params }: OrderConfirmationProps) {
       setOrderId(id)
       
       const orderData = await getProductOrder(id)
-      setOrder(orderData)
+      setOrder(orderData as unknown as OrderData)
       setLoading(false)
     }
 
@@ -91,6 +89,10 @@ export default function OrderConfirmation({ params }: OrderConfirmationProps) {
 
   const statusColor = statusColors[order.status] || 'bg-gray-100 text-gray-800'
 
+  const subtotal = order.items?.reduce((sum, item) => sum + parseFloat(item.unitPrice.toString()) * item.quantity, 0) || 0
+  const deliveryFee = 5.00
+  const tax = Math.round((subtotal + deliveryFee) * 0.05 * 100) / 100
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -127,8 +129,8 @@ export default function OrderConfirmation({ params }: OrderConfirmationProps) {
             <h3 className="text-lg font-semibold mb-4">Order Information</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Order ID:</span>
-                <span className="font-mono font-semibold">{order.id}</span>
+                <span className="text-muted-foreground">Order Number:</span>
+                <span className="font-mono font-semibold">{order.orderNumber || order.id}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status:</span>
@@ -147,8 +149,10 @@ export default function OrderConfirmation({ params }: OrderConfirmationProps) {
           <div>
             <h3 className="text-lg font-semibold mb-4">Delivery Address</h3>
             <div className="space-y-2 text-sm">
-              <p className="font-semibold">{order.address}</p>
-              <p className="text-muted-foreground">{order.phone}</p>
+              <p className="font-semibold">{order.deliveryAddress}</p>
+              {order.deliveryNotes && (
+                <p className="text-muted-foreground">{order.deliveryNotes}</p>
+              )}
               <p className="text-muted-foreground mt-4 text-xs">
                 Estimated delivery: 30-45 minutes
               </p>
@@ -166,11 +170,11 @@ export default function OrderConfirmation({ params }: OrderConfirmationProps) {
                   <div>
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      Quantity: {item.quantity} × ₹{parseFloat(item.unitPrice.toString()).toFixed(2)}
+                      Quantity: {item.quantity} × {parseFloat(item.unitPrice.toString()).toFixed(2)} Birr
                     </p>
                   </div>
                   <p className="font-semibold">
-                    ₹{(parseFloat(item.unitPrice.toString()) * item.quantity).toFixed(2)}
+                    {(parseFloat(item.unitPrice.toString()) * item.quantity).toFixed(2)} Birr
                   </p>
                 </div>
               ))
@@ -186,19 +190,19 @@ export default function OrderConfirmation({ params }: OrderConfirmationProps) {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal:</span>
-              <span>₹{parseFloat(order.subtotal.toString()).toFixed(2)}</span>
+              <span>{subtotal.toFixed(2)} Birr</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Delivery Fee:</span>
-              <span>₹{parseFloat(order.deliveryFee.toString()).toFixed(2)}</span>
+              <span>{deliveryFee.toFixed(2)} Birr</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Tax (5%):</span>
-              <span>₹{parseFloat(order.tax.toString()).toFixed(2)}</span>
+              <span>{tax.toFixed(2)} Birr</span>
             </div>
             <div className="border-t border-border pt-3 flex justify-between font-semibold">
               <span>Total:</span>
-              <span className="text-lg">₹{parseFloat(order.total.toString()).toFixed(2)}</span>
+              <span className="text-lg">{parseFloat(order.totalAmount.toString()).toFixed(2)} Birr</span>
             </div>
           </div>
         </div>

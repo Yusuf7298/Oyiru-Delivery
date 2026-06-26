@@ -9,6 +9,18 @@ import { headers } from 'next/headers'
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) throw new Error('Unauthorized')
+  
+  // Enforce admin role
+  const profile = await db
+    .select()
+    .from(usersProfile)
+    .where(eq(usersProfile.userId, session.user.id))
+    .limit(1)
+    
+  if (profile[0]?.role !== 'admin' && profile[0]?.role !== 'super_admin') {
+    throw new Error('Forbidden: Admin access required')
+  }
+  
   return session.user.id
 }
 

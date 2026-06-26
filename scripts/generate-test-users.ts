@@ -1,7 +1,8 @@
 import { db } from '@/lib/db'
-import { user, usersProfile } from '@/lib/db/schema'
+import { user, usersProfile, account } from '@/lib/db/schema'
 import { v4 as uuidv4 } from 'uuid'
-import { hash } from '@node-rs/bcrypt'
+import { eq } from 'drizzle-orm'
+import { auth } from '@/lib/auth'
 
 const TEST_USERS = [
   {
@@ -34,22 +35,29 @@ async function generateTestUsers() {
   try {
     console.log('Generating test users...')
 
+    // First delete existing test accounts to reset them cleanly
     for (const testUser of TEST_USERS) {
-      const userId = uuidv4()
-      const hashedPassword = await hash(testUser.password, 10)
+      const existingUser = await db.query.user.findFirst({ where: eq(user.email, testUser.email) })
+      if (existingUser) {
+        await db.delete(user).where(eq(user.id, existingUser.id))
+      }
+    }
 
-      // Create user
-      await db
-        .insert(user)
-        .values({
-          id: userId,
-          name: testUser.name,
-          email: testUser.email,
-          emailVerified: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+    for (const testUser of TEST_USERS) {
+      let userId = ''
+      try {
+        const res = await auth.api.signUpEmail({
+          body: {
+            email: testUser.email,
+            password: testUser.password,
+            name: testUser.name
+          }
         })
-        .onConflictDoNothing()
+        userId = res.user.id
+      } catch (e) {
+        console.error(`Failed to create ${testUser.email}:`, e)
+        continue
+      }
 
       // Create profile
       await db

@@ -47,12 +47,15 @@ export default function HotelDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/" className="p-2 hover:bg-muted rounded-lg transition-colors" title="Storefront Home">
+              <span className="text-sm font-medium mr-1 hidden sm:inline-block">Storefront</span>
+            </Link>
             <Link href="/profile" className="p-2 hover:bg-muted rounded-lg transition-colors">
               <Settings className="w-5 h-5" />
             </Link>
-            <Link href="/sign-in" className="p-2 hover:bg-muted rounded-lg transition-colors">
+            <button onClick={() => { window.location.href = '/' }} className="p-2 hover:bg-muted rounded-lg transition-colors text-destructive">
               <LogOut className="w-5 h-5" />
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -87,7 +90,7 @@ export default function HotelDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Total Spent</p>
-                  <p className="text-3xl font-bold">₹{stats.totalSpent.toFixed(2)}</p>
+                  <p className="text-3xl font-bold">{stats.totalSpent.toFixed(2)} Birr</p>
                 </div>
                 <BarChart3 className="w-10 h-10 text-green-500 opacity-20" />
               </div>

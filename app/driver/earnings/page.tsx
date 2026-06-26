@@ -59,7 +59,7 @@ export default function DriverEarnings() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
-                <p className="text-3xl font-bold text-foreground">₹{totalEarnings.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-foreground">{totalEarnings.toFixed(2)} Birr</p>
               </div>
               <div className="p-3 bg-emerald-100 rounded-lg">
                 <DollarSign className="w-6 h-6 text-emerald-600" />
@@ -84,7 +84,7 @@ export default function DriverEarnings() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Average Per Delivery</p>
                 <p className="text-3xl font-bold text-foreground">
-                  ₹{deliveries.length > 0 ? (totalEarnings / deliveries.length).toFixed(2) : '0.00'}
+                  {deliveries.length > 0 ? (totalEarnings / deliveries.length).toFixed(2) : '0.00'} Birr
                 </p>
               </div>
               <div className="p-3 bg-amber-100 rounded-lg">
@@ -127,7 +127,7 @@ export default function DriverEarnings() {
                     <tr key={delivery.id} className="border-b border-border hover:bg-muted/30 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-foreground">{delivery.orderNumber}</td>
                       <td className="px-6 py-4 text-sm text-muted-foreground truncate">{delivery.deliveryAddress}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-primary">₹{delivery.totalAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-primary">{delivery.totalAmount.toFixed(2)} Birr</td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {delivery.deliveryTime
                           ? new Date(delivery.deliveryTime).toLocaleString()

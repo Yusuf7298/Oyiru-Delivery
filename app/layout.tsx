@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { CartProvider } from '@/lib/contexts/cart-context'
+import { Header } from '@/components/header'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -13,24 +14,23 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Oyru - Fast Product Delivery',
   description: 'Order products and essentials with fast delivery. Get your items delivered in minutes.',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
+  // icons: {
+  //   icon: [
+  //     {
+  //       url: '/icon-light-32x32.png',
+  //       media: '(prefers-color-scheme: light)',
+  //     },
+  //     {
+  //       url: '/icon-dark-32x32.png',
+  //       media: '(prefers-color-scheme: dark)',
+  //     },
+  //     {
+  //       url: '/icon.svg',
+  //       type: 'image/svg+xml',
+  //     },
+  //   ],
+  //   apple: '/apple-icon.png',
+  // },
 }
 
 export const viewport: Viewport = {
@@ -48,9 +48,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased min-h-screen flex flex-col">
         <CartProvider>
-          {children}
+          <Header />
+          <main className="flex-1 flex flex-col">
+            {children}
+          </main>
           {process.env.NODE_ENV === 'production' && <Analytics />}
         </CartProvider>
       </body>

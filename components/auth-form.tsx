@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import { getUserProfile } from '@/app/actions/users'
 
-export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
+export function AuthForm({ mode, allowedRoles }: { mode: 'sign-in' | 'sign-up', allowedRoles?: string[] }) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -35,7 +36,29 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       return
     }
 
-    router.push('/')
+    try {
+      const profile = await getUserProfile()
+      
+      if (allowedRoles && profile?.role && !allowedRoles.includes(profile.role)) {
+        await authClient.signOut()
+        setError('You are not authorized to access this portal.')
+        return
+      }
+
+      let redirectUrl = '/'
+      if (profile?.role === 'admin' || profile?.role === 'super_admin') {
+        redirectUrl = '/admin'
+      } else if (profile?.role === 'delivery_partner') {
+        redirectUrl = '/driver'
+      } else if (profile?.role === 'restaurant_owner') {
+        redirectUrl = '/hotel'
+      }
+      
+      // If a specific portal was accessed, just reload into the dashboard
+      router.push(redirectUrl)
+    } catch (err) {
+      router.push('/')
+    }
     router.refresh()
   }
 
@@ -44,12 +67,10 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
       <Card className="w-full max-w-sm p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {isSignUp ? 'Create an account' : 'Welcome back'}
+            {allowedRoles ? `${allowedRoles[0].replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Portal` : (isSignUp ? 'Create an account' : 'Welcome back')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {isSignUp
-              ? 'Sign up to get started'
-              : 'Sign in to your account to continue'}
+            {allowedRoles ? 'Sign in to access your dashboard' : (isSignUp ? 'Sign up to get started' : 'Sign in to your account to continue')}
           </p>
         </div>
 

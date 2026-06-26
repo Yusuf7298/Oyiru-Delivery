@@ -1,16 +1,16 @@
+import { getAuthContext, requireDriver } from '@/lib/middleware/role-check'
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { ReactNode } from 'react'
 
-export default async function DriverLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const session = await auth.api.getSession({ headers: await headers() })
+export default async function DriverLayout({ children }: { children: ReactNode }) {
+  const auth = await getAuthContext()
 
-  if (!session?.user?.id) {
-    redirect('/auth/login')
+  if (!auth?.isAuthenticated) {
+    redirect('/auth-driver-k9v1')
+  }
+
+  if (!requireDriver(auth)) {
+    redirect('/')
   }
 
   return <>{children}</>

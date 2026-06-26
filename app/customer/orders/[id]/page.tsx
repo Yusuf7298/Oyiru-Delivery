@@ -142,10 +142,10 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-foreground">
-                        ₹{(Number(item.unitPrice) * item.quantity).toFixed(2)}
+                        {(Number(item.unitPrice) * item.quantity).toFixed(2)} Birr
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        ₹{Number(item.unitPrice).toFixed(2)} each
+                        {Number(item.unitPrice).toFixed(2)} Birr each
                       </p>
                     </div>
                   </div>
@@ -162,16 +162,16 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold">₹{Number(order.totalAmount).toFixed(2)}</span>
+                  <span className="font-semibold">{Number(order.totalAmount).toFixed(2)} Birr</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery Fee</span>
-                  <span className="font-semibold">₹0.00</span>
+                  <span className="font-semibold">0.00 Birr</span>
                 </div>
                 <div className="border-t border-border pt-3 flex justify-between">
                   <span className="font-bold text-foreground">Total</span>
                   <span className="text-xl font-bold text-primary">
-                    ₹{Number(order.totalAmount).toFixed(2)}
+                    {Number(order.totalAmount).toFixed(2)} Birr
                   </span>
                 </div>
               </div>

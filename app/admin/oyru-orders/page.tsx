@@ -123,7 +123,7 @@ export default function OyruOrdersPage() {
                   </div>
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p>
-                      <strong>Total:</strong> ₹{Number(order.totalAmount).toFixed(2)}
+                      <strong>Total:</strong> {Number(order.totalAmount).toFixed(2)} Birr
                     </p>
                     <p>
                       <strong>Payment:</strong> {order.paymentMethod}
@@ -171,7 +171,7 @@ export default function OyruOrdersPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Total Amount</p>
                 <p className="font-semibold text-lg text-primary">
-                  ₹{Number(selectedOrder.totalAmount).toFixed(2)}
+                  {Number(selectedOrder.totalAmount).toFixed(2)} Birr
                 </p>
               </div>
               <div>
@@ -194,7 +194,7 @@ export default function OyruOrdersPage() {
                         className="flex justify-between text-sm border-b border-border pb-2"
                       >
                         <span>Qty: {item.quantity}</span>
-                        <span>₹{Number(item.unitPrice).toFixed(2)} each</span>
+                        <span>{Number(item.unitPrice).toFixed(2)} Birr each</span>
                       </div>
                     ))}
                   </div>

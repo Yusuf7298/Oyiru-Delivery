@@ -54,9 +54,14 @@ export default function DriverDashboard() {
               </div>
               <h1 className="text-2xl font-bold text-foreground">Driver Hub</h1>
             </div>
-            <Link href="/profile">
-              <Button variant="outline">Profile</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/">
+                <Button variant="ghost">Storefront</Button>
+              </Link>
+              <Link href="/profile">
+                <Button variant="outline">Profile</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -96,7 +101,7 @@ export default function DriverDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
-                <p className="text-3xl font-bold text-foreground">₹{stats.totalEarnings.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-foreground">{stats.totalEarnings.toFixed(2)} Birr</p>
               </div>
               <div className="p-3 bg-emerald-100 rounded-lg">
                 <DollarSign className="w-6 h-6 text-emerald-600" />
@@ -164,7 +169,7 @@ export default function DriverDashboard() {
                   <p className="text-sm text-muted-foreground">View earnings & completed deliveries</p>
                 </div>
               </div>
-              <p className="text-sm text-primary font-semibold">Total: ₹{stats.totalEarnings.toFixed(2)}</p>
+              <p className="text-sm text-primary font-semibold">Total: {stats.totalEarnings.toFixed(2)} Birr</p>
             </Card>
           </Link>
         </div>

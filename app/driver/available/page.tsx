@@ -109,7 +109,7 @@ export default function AvailableDeliveries() {
                       <DollarSign className="w-4 h-4" />
                       Delivery Fee
                     </p>
-                    <p className="font-bold text-primary text-lg">₹{delivery.totalAmount.toFixed(2)}</p>
+                    <p className="font-bold text-primary text-lg">{delivery.totalAmount.toFixed(2)} Birr</p>
                   </div>
 
                   {/* Action */}

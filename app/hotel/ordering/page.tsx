@@ -252,7 +252,7 @@ export default function HotelOrderingPage() {
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <p className="text-2xl font-bold text-primary">
-                            ₹{Number(product.price).toFixed(2)}
+                            {Number(product.price).toFixed(2)} Birr
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {product.stockQuantity} in stock
@@ -323,7 +323,7 @@ export default function HotelOrderingPage() {
                         <div className="flex-1">
                           <p className="font-medium">{item.productName}</p>
                           <p className="text-xs text-muted-foreground">
-                            ₹{Number(item.price).toFixed(2)}
+                            {Number(item.price).toFixed(2)} Birr
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -368,12 +368,12 @@ export default function HotelOrderingPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal:</span>
                       <span className="font-semibold">
-                        ₹{totalPrice.toFixed(2)}
+                        {totalPrice.toFixed(2)} Birr
                       </span>
                     </div>
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total:</span>
-                      <span className="text-primary">₹{totalPrice.toFixed(2)}</span>
+                      <span className="text-primary">{totalPrice.toFixed(2)} Birr</span>
                     </div>
                   </div>
 

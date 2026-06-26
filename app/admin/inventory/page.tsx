@@ -107,7 +107,7 @@ export default function InventoryPage() {
                 <tr key={item.id} className="border-b border-border hover:bg-muted/50">
                   <td className="px-6 py-4 font-medium">{item.name}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{item.categoryName}</td>
-                  <td className="px-6 py-4 font-semibold">₹{Number(item.price).toFixed(2)}</td>
+                  <td className="px-6 py-4 font-semibold">{Number(item.price).toFixed(2)} Birr</td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center gap-2">
                       <div className="w-32 bg-border rounded-full h-2">

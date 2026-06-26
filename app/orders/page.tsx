@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getUserOrders, getOrder } from '@/app/actions/orders'
+import { getUserProductOrders, getProductOrder } from '@/app/actions/product-orders'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 
@@ -25,7 +25,7 @@ export default function OrdersPage() {
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        const data = await getUserOrders()
+        const data = await getUserProductOrders()
         setOrders(data)
       } catch (error) {
         console.error('Error loading orders:', error)
@@ -39,11 +39,19 @@ export default function OrdersPage() {
 
   const handleViewOrder = async (orderId: string) => {
     try {
-      const orderData = await getOrder(orderId)
+      const orderData = await getProductOrder(orderId)
       setSelectedOrder(orderData)
     } catch (error) {
       console.error('Error loading order:', error)
     }
+  }
+
+  const computeSubtotal = (order: any) => {
+    if (order.items && order.items.length > 0) {
+      return order.items.reduce((sum: number, item: any) => sum + parseFloat(item.unitPrice || 0) * item.quantity, 0)
+    }
+    // Fallback if items not loaded yet
+    return parseFloat(order.totalAmount) - 5.00
   }
 
   return (
@@ -76,7 +84,7 @@ export default function OrdersPage() {
                 className="w-full bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow text-left"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-lg">Order #{order.id.slice(0, 8)}</span>
+                  <span className="font-semibold text-lg">Order #{order.orderNumber || order.id.slice(0, 8)}</span>
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[order.status] || 'bg-gray-100'}`}
                   >
@@ -85,7 +93,7 @@ export default function OrdersPage() {
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>{new Date(order.createdAt).toLocaleDateString()}</span>
-                  <span className="font-semibold text-foreground">${parseFloat(order.totalAmount).toFixed(2)}</span>
+                  <span className="font-semibold text-foreground">{parseFloat(order.totalAmount).toFixed(2)} Birr</span>
                 </div>
               </button>
             ))}
@@ -105,7 +113,7 @@ export default function OrdersPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-card rounded-lg max-w-md w-full p-6 max-h-96 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Order #{selectedOrder.id.slice(0, 8)}</h2>
+              <h2 className="text-xl font-bold">Order #{selectedOrder.orderNumber || selectedOrder.id.slice(0, 8)}</h2>
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="text-muted-foreground hover:text-foreground"
@@ -135,8 +143,8 @@ export default function OrdersPage() {
                 <div className="space-y-2">
                   {selectedOrder.items?.map((item: any) => (
                     <div key={item.id} className="flex justify-between text-sm">
-                      <span>{item.dishId} x{item.quantity}</span>
-                      <span className="font-semibold">${parseFloat(item.totalPrice).toFixed(2)}</span>
+                      <span>{item.name} x{item.quantity}</span>
+                      <span className="font-semibold">{(parseFloat(item.unitPrice) * item.quantity).toFixed(2)} Birr</span>
                     </div>
                   ))}
                 </div>
@@ -146,18 +154,16 @@ export default function OrdersPage() {
                 <div className="flex justify-between mb-2">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>
-                    ${(
-                      parseFloat(selectedOrder.totalAmount) - parseFloat(selectedOrder.deliveryFee)
-                    ).toFixed(2)}
+                    {computeSubtotal(selectedOrder).toFixed(2)} Birr
                   </span>
                 </div>
                 <div className="flex justify-between mb-2">
                   <span className="text-muted-foreground">Delivery</span>
-                  <span>${parseFloat(selectedOrder.deliveryFee).toFixed(2)}</span>
+                  <span>5.00 Birr</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-primary">${parseFloat(selectedOrder.totalAmount).toFixed(2)}</span>
+                  <span className="text-primary">{parseFloat(selectedOrder.totalAmount).toFixed(2)} Birr</span>
                 </div>
               </div>
 

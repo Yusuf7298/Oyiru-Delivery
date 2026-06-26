@@ -137,7 +137,7 @@ export default function OrdersPage() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Total Amount</p>
-                      <p className="font-bold text-foreground">₹{Number(order.totalAmount).toFixed(2)}</p>
+                      <p className="font-bold text-foreground">{Number(order.totalAmount).toFixed(2)} Birr</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Delivery To</p>

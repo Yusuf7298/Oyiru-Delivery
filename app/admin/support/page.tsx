@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, Search, AlertCircle, MessageCircle } from 'lucide-react'
@@ -10,6 +10,11 @@ export default function AdminSupportPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   const mockTickets = [
     {
@@ -141,7 +146,7 @@ export default function AdminSupportPage() {
               </div>
 
               <p className="text-sm text-muted-foreground mb-4">
-                Opened: {ticket.createdAt.toLocaleString()}
+                Opened: {isHydrated ? ticket.createdAt.toLocaleString() : ''}
               </p>
 
               <Link href={`/admin/support/${ticket.id}`}>
