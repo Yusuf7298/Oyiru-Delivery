@@ -159,12 +159,29 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-white/80">
-              {/* We'll just show an empty state for now, assuming actual data fetching logic can be added later */}
-              <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-white/50">
-                  No recent orders found.
-                </td>
-              </tr>
+              {stats?.recentOrders && stats.recentOrders.length > 0 ? (
+                stats.recentOrders.map((order: any) => (
+                  <tr key={order.id} className="hover:bg-white/5 transition-colors">
+                    <td className="px-6 py-4 font-mono">{order.orderNumber}</td>
+                    <td className="px-6 py-4">{order.userId ? 'Registered User' : 'Guest'}</td>
+                    <td className="px-6 py-4 font-semibold">{parseFloat(order.totalAmount).toFixed(2)} Birr</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300">
+                        {order.status || 'pending'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-white/50">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-white/50">
+                    No recent orders found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

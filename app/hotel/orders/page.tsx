@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { Eye, Download } from 'lucide-react'
 import Link from 'next/link'
@@ -102,9 +103,9 @@ Delivery Address: ${order.deliveryAddress}
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/hotel" className="flex items-center gap-2 font-bold text-xl">
-            <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center text-sm">
-              Oy
-            </div>
+            <span className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 shadow">
+              <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="32px" />
+            </span>
             <span>My Orders</span>
           </Link>
           <Link

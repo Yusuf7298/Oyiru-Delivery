@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ShoppingCart, BarChart3, Truck, Settings, LogOut } from 'lucide-react'
@@ -38,8 +39,8 @@ export default function HotelDashboard() {
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-lg">
-              Oy
+            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 shadow">
+              <Image src="/logo.jpg" alt="Oyru" width={40} height={40} className="object-cover w-full h-full" />
             </div>
             <div>
               <h1 className="font-bold text-lg">Oyru Hotel</h1>

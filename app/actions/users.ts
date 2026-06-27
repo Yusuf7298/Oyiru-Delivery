@@ -81,8 +81,32 @@ export async function updateUserProfile(data: {
 }
 
 /**
- * Set user role
+ * Ensure a profile exists for the current user. Creates one with 'customer' role if missing.
+ * Returns the existing or newly created profile.
  */
+export async function ensureProfile() {
+  const userId = await getUserId()
+
+  const existing = await db
+    .select()
+    .from(usersProfile)
+    .where(eq(usersProfile.userId, userId))
+    .limit(1)
+
+  if (existing.length) return existing[0]
+
+  const profileId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const [newProfile] = await db
+    .insert(usersProfile)
+    .values({
+      id: profileId,
+      userId,
+      role: 'customer',
+    })
+    .returning()
+
+  return newProfile
+}
 export async function setUserRole(role: 'customer' | 'restaurant_owner' | 'delivery_partner' | 'admin') {
   const userId = await getUserId()
 

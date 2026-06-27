@@ -6,9 +6,11 @@ import { db } from '@/lib/db'
 import { usersProfile } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await getSession()
-  
+
   if (!session?.user) {
     redirect('/sign-in')
   }
@@ -25,7 +27,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AdminSidebar />
+      <AdminSidebar role={profile[0]?.role} />
       <div className="flex-1 overflow-x-hidden">
         {children}
       </div>

@@ -56,8 +56,8 @@ export default function HomePage() {
 
   const filteredProducts = products.filter((p) => {
     const matchesCategory = selectedCategory && selectedCategory !== 'all' ? p.categoryId === selectedCategory : true;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (p.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   })
 
@@ -68,6 +68,12 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-grid-black/[0.02] dark:bg-grid-white/[0.02]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 relative z-10">
           <div className="max-w-2xl animate-in slide-in-from-bottom-6 fade-in duration-700">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg flex-shrink-0">
+                <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="48px" priority />
+              </span>
+              <span className="font-bold text-2xl text-foreground tracking-tight">Oyru</span>
+            </div>
             <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 leading-tight">
               Get Everything <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Delivered</span>
             </h1>
@@ -146,8 +152,8 @@ export default function HomePage() {
                 <Search className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
                 <h3 className="text-2xl font-bold mb-2">No products found</h3>
                 <p className="text-muted-foreground mb-6 max-w-md">We couldn't find any products matching your search or category filter.</p>
-                <button 
-                  onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }} 
+                <button
+                  onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
                   className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-semibold hover:bg-primary/90 transition-colors shadow-md"
                 >
                   Clear all filters
@@ -169,12 +175,14 @@ export default function HomePage() {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
-                          No image
+                        <div className="w-full h-full flex items-center justify-center bg-muted/50 p-6">
+                          <span className="relative w-16 h-16 rounded-xl overflow-hidden opacity-40">
+                            <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="64px" />
+                          </span>
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      
+
                       <div className="absolute top-3 left-3 flex gap-1">
                         <div className="flex items-center gap-1 bg-background/90 backdrop-blur-md px-2 py-1 rounded-lg text-xs font-bold text-yellow-500 shadow-sm">
                           <Star className="w-3 h-3 fill-yellow-500" />

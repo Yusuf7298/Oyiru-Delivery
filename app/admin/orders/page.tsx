@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getAllRestaurants } from '@/app/actions/admin-dashboard'
+import { getAllOrders } from '@/app/actions/admin'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, Search, Filter, Download } from 'lucide-react'
 
@@ -17,8 +17,10 @@ export default function AdminOrdersPage() {
     const loadOrders = async () => {
       try {
         setLoading(true)
-        // Fetch orders would go here
-        // For now, we'll show the structure
+        const data = await getAllOrders()
+        // Sort newest first
+        const sorted = data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        setOrders(sorted)
       } catch (error) {
         console.error('Error loading orders:', error)
       } finally {
@@ -125,13 +127,13 @@ export default function AdminOrdersPage() {
                 ) : (
                   orders.map((order: any) => (
                     <tr key={order.id} className="hover:bg-secondary/20 transition-colors">
-                      <td className="px-6 py-4 font-mono text-sm">{order.id.substring(0, 8)}</td>
-                      <td className="px-6 py-4 text-sm">Customer</td>
-                      <td className="px-6 py-4 text-sm">Restaurant</td>
-                      <td className="px-6 py-4 text-sm font-semibold">${order.totalAmount?.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-mono text-sm">{order.orderNumber}</td>
+                      <td className="px-6 py-4 text-sm">{order.userId ? 'Registered User' : 'Guest'}</td>
+                      <td className="px-6 py-4 text-sm">Oyru Store</td>
+                      <td className="px-6 py-4 text-sm font-semibold">{parseFloat(order.totalAmount).toFixed(2)} Birr</td>
                       <td className="px-6 py-4">
                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                          {order.status}
+                          {order.status || 'pending'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">

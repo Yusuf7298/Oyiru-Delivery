@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
@@ -46,10 +47,10 @@ export default function DeliveryDashboard() {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-2xl">
-            <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold">
-              DP
-            </div>
-            <span className="hidden sm:inline">Oyru Delivery</span>
+            <span className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 shadow">
+              <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="32px" />
+            </span>
+            <span>Oyru Delivery</span>
           </Link>
           <Link href="/profile">
             <Button variant="outline">Profile</Button>
@@ -126,8 +127,8 @@ export default function DeliveryDashboard() {
           <button
             onClick={() => setTab('available')}
             className={`px-4 py-2 font-semibold transition-colors ${tab === 'available'
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-muted-foreground hover:text-foreground'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-muted-foreground hover:text-foreground'
               }`}
           >
             Available Orders ({availableOrders.length})
@@ -135,8 +136,8 @@ export default function DeliveryDashboard() {
           <button
             onClick={() => setTab('active')}
             className={`px-4 py-2 font-semibold transition-colors ${tab === 'active'
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-muted-foreground hover:text-foreground'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-muted-foreground hover:text-foreground'
               }`}
           >
             Active Deliveries ({activeOrders.length})

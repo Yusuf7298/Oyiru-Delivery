@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchRestaurants } from '@/app/actions/restaurants'
@@ -43,9 +44,14 @@ export default function TelegramHome() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-card border-b border-border py-4 px-4">
-        <h1 className="text-xl font-bold">Oyru Delivery</h1>
-        <p className="text-xs text-muted-foreground">Order from your favorite restaurants</p>
+      <div className="sticky top-0 z-50 bg-card border-b border-border py-3 px-4 flex items-center gap-3">
+        <span className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 shadow">
+          <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="32px" priority />
+        </span>
+        <div>
+          <h1 className="text-base font-bold leading-tight">Oyru Delivery</h1>
+          <p className="text-xs text-muted-foreground leading-tight">Order from your favorite restaurants</p>
+        </div>
       </div>
 
       {/* Content */}

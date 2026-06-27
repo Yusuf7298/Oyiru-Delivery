@@ -1,13 +1,5 @@
-import { getAuthContext } from '@/lib/middleware/role-check'
-import { redirect } from 'next/navigation'
-import { ReactNode } from 'react'
+export const dynamic = 'force-dynamic'
 
-export default async function ProfileLayout({ children }: { children: ReactNode }) {
-  const auth = await getAuthContext()
-
-  if (!auth?.isAuthenticated) {
-    redirect('/sign-in')
-  }
-
+export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }

@@ -1,28 +1,34 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  BarChart3, 
-  ShoppingCart, 
-  Users, 
-  Store, 
-  Truck, 
-  LineChart, 
-  LifeBuoy, 
+import {
+  BarChart3,
+  ShoppingCart,
+  Users,
+  Store,
+  Truck,
+  LineChart,
+  LifeBuoy,
   Settings,
   LogOut,
-  Home
+  Home,
+  MessageSquare,
+  RotateCcw,
+  Shield
 } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 
-export function AdminSidebar() {
+export function AdminSidebar({ role }: { role?: string }) {
   const pathname = usePathname()
 
   const navItems = [
     { name: 'Storefront', href: '/', icon: Home },
     { name: 'Overview', href: '/admin', icon: BarChart3 },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Feedbacks', href: '/admin/feedbacks', icon: MessageSquare },
+    { name: 'Returns', href: '/admin/returns', icon: RotateCcw },
     { name: 'Customers', href: '/admin/customers', icon: Users },
     { name: 'Restaurants', href: '/admin/restaurants', icon: Store },
     { name: 'Delivery Partners', href: '/admin/delivery-partners', icon: Truck },
@@ -31,12 +37,16 @@ export function AdminSidebar() {
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
 
+  if (role === 'super_admin') {
+    navItems.push({ name: 'Staff Accounts', href: '/admin/staff', icon: Shield })
+  }
+
   return (
     <div className="w-64 bg-card/50 backdrop-blur-md border-r border-border/50 h-screen sticky top-0 flex flex-col pt-6 pb-4 shadow-xl">
       <div className="px-6 mb-8 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center font-bold shadow-lg shadow-primary/20">
-          OA
-        </div>
+        <span className="relative w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-primary/20 flex-shrink-0">
+          <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="40px" priority />
+        </span>
         <span className="font-bold text-xl text-foreground">Oyru Admin</span>
       </div>
 
@@ -47,11 +57,10 @@ export function AdminSidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium ${
-                isActive
-                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium ${isActive
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
             >
               <item.icon className="w-5 h-5" />
               {item.name}

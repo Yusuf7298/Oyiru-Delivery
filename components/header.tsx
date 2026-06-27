@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/lib/contexts/cart-context'
 import { ShoppingCart, Menu } from 'lucide-react'
@@ -31,9 +32,9 @@ export function Header() {
         <div className="h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-bold text-2xl group transition-transform duration-300 hover:scale-[1.02]">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center font-bold shadow-lg shadow-primary/20">
-              Oy
-            </div>
+            <span className="relative w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-primary/20 flex-shrink-0">
+              <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="36px" priority />
+            </span>
             <span className="hidden sm:inline bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Oyru</span>
           </Link>
 

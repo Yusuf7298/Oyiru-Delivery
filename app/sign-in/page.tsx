@@ -1,7 +1,8 @@
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { AuthForm } from '@/components/auth-form'
 import { getAuthContext } from '@/lib/middleware/role-check'
+
+export const dynamic = 'force-dynamic'
 
 export default async function SignInPage() {
   const authContext = await getAuthContext()
@@ -11,5 +12,5 @@ export default async function SignInPage() {
     if (authContext.role === 'restaurant_owner') redirect('/hotel')
     redirect('/')
   }
-  return <AuthForm mode="sign-in" allowedRoles={['customer']} />
+  return <AuthForm mode="sign-in" />
 }

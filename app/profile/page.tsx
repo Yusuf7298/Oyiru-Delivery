@@ -6,9 +6,9 @@ import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 import { getUserProfile, updateUserProfile } from '@/app/actions/users'
 import { Button } from '@/components/ui/button'
-import { 
-  User, Shield, Activity, MapPin, Phone, Mail, 
-  Camera, Package, ShoppingCart, Store, CheckCircle2, 
+import {
+  User, Shield, Activity, MapPin, Phone, Mail,
+  Camera, Package, ShoppingCart, Store, CheckCircle2,
   LogOut, Loader2, Edit3, X
 } from 'lucide-react'
 
@@ -20,8 +20,8 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('personal')
-  const [toast, setToast] = useState<{show: boolean, message: string}>({show: false, message: ''})
-  
+  const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' })
+
   const [formData, setFormData] = useState({
     phoneNumber: '',
     address: '',
@@ -113,7 +113,7 @@ export default function ProfilePage() {
   }
 
   const getRoleBadge = (role: string) => {
-    switch(role) {
+    switch (role) {
       case 'admin':
       case 'super_admin':
         return <span className="bg-red-500/10 text-red-500 border border-red-500/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Admin</span>
@@ -139,7 +139,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background/50 pb-20 relative">
-      
+
       {/* Toast Notification */}
       <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ${toast.show ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10 pointer-events-none'}`}>
         <div className="bg-card border border-border shadow-2xl rounded-full px-6 py-3 flex items-center gap-3">
@@ -160,7 +160,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10">
-        
+
         {/* Profile Header Card */}
         <div className="bg-card/80 backdrop-blur-xl border border-border rounded-3xl p-6 sm:p-8 shadow-2xl mb-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8">
@@ -174,7 +174,7 @@ export default function ProfilePage() {
                 <Camera className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="flex-1 text-center sm:text-left">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
                 <h1 className="text-3xl font-extrabold tracking-tight">{user.name || 'User'}</h1>
@@ -198,19 +198,19 @@ export default function ProfilePage() {
 
         {/* Tab Navigation */}
         <div className="flex items-center gap-2 mb-8 bg-card border border-border p-2 rounded-2xl overflow-x-auto hide-scrollbar">
-          <button 
+          <button
             onClick={() => setActiveTab('personal')}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 whitespace-nowrap ${activeTab === 'personal' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'hover:bg-secondary text-muted-foreground hover:text-foreground'}`}
           >
             <User className="w-4 h-4" /> Personal Info
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('security')}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 whitespace-nowrap ${activeTab === 'security' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'hover:bg-secondary text-muted-foreground hover:text-foreground'}`}
           >
             <Shield className="w-4 h-4" /> Account Security
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('activity')}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 whitespace-nowrap ${activeTab === 'activity' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'hover:bg-secondary text-muted-foreground hover:text-foreground'}`}
           >
@@ -220,9 +220,9 @@ export default function ProfilePage() {
 
         {/* Tab Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           <div className="lg:col-span-2">
-            
+
             {activeTab === 'personal' && (
               <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center justify-between mb-8">
@@ -235,12 +235,14 @@ export default function ProfilePage() {
                       <Edit3 className="w-4 h-4 mr-2" /> Edit Details
                     </Button>
                   ) : (
-                    <Button onClick={() => { setEditing(false); setFormData({
-                      phoneNumber: profile.phoneNumber || '',
-                      address: profile.address || '',
-                      city: profile.city || '',
-                      zipCode: profile.zipCode || ''
-                    })}} variant="ghost" size="sm" className="rounded-full text-muted-foreground h-9">
+                    <Button onClick={() => {
+                      setEditing(false); setFormData({
+                        phoneNumber: profile.phoneNumber || '',
+                        address: profile.address || '',
+                        city: profile.city || '',
+                        zipCode: profile.zipCode || ''
+                      })
+                    }} variant="ghost" size="sm" className="rounded-full text-muted-foreground h-9">
                       <X className="w-4 h-4 mr-2" /> Cancel
                     </Button>
                   )}
@@ -327,7 +329,7 @@ export default function ProfilePage() {
                   <h2 className="text-xl font-bold">Account Security</h2>
                   <p className="text-sm text-muted-foreground mt-1">Manage your sensitive account settings</p>
                 </div>
-                
+
                 <div className="space-y-6">
                   <div className="p-5 rounded-2xl bg-secondary/30 border border-border flex items-center justify-between">
                     <div>
@@ -336,7 +338,7 @@ export default function ProfilePage() {
                     </div>
                     <span className="px-3 py-1 bg-green-500/10 text-green-500 text-xs font-bold uppercase rounded-full">Verified</span>
                   </div>
-                  
+
                   <div className="p-5 rounded-2xl bg-secondary/30 border border-border flex items-center justify-between">
                     <div>
                       <h4 className="font-semibold mb-1">Password</h4>
@@ -344,7 +346,7 @@ export default function ProfilePage() {
                     </div>
                     <Button variant="outline" size="sm" className="rounded-full">Update</Button>
                   </div>
-                  
+
                   <div className="p-5 rounded-2xl bg-secondary/30 border border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                       <h4 className="font-semibold mb-1">Two-Factor Authentication</h4>
@@ -392,7 +394,7 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-          
+
           <div className="lg:col-span-1 space-y-6">
             {/* Quick Stats Sidebar */}
             <div className="bg-card border border-border rounded-3xl p-6 shadow-sm">

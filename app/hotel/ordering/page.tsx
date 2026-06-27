@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { ShoppingCart, Filter, X } from 'lucide-react'
 import Link from 'next/link'
@@ -154,9 +155,9 @@ export default function HotelOrderingPage() {
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/hotel" className="flex items-center gap-2 font-bold text-xl">
-            <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center text-sm">
-              Oy
-            </div>
+            <span className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 shadow">
+              <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="32px" />
+            </span>
             <span>Hotel Ordering</span>
           </Link>
           <button
@@ -194,11 +195,10 @@ export default function HotelOrderingPage() {
           <div className="flex items-center gap-2 overflow-x-auto pb-2">
             <button
               onClick={() => setSelectedCategory('')}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-colors ${
-                selectedCategory === ''
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-foreground hover:bg-muted/80'
-              }`}
+              className={`px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-colors ${selectedCategory === ''
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-foreground hover:bg-muted/80'
+                }`}
             >
               All
             </button>
@@ -206,11 +206,10 @@ export default function HotelOrderingPage() {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-colors ${
-                  selectedCategory === category.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground hover:bg-muted/80'
-                }`}
+                className={`px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-colors ${selectedCategory === category.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-foreground hover:bg-muted/80'
+                  }`}
               >
                 {category.name}
               </button>
@@ -262,11 +261,10 @@ export default function HotelOrderingPage() {
                       <button
                         onClick={() => handleAddToCart(product)}
                         disabled={product.stockQuantity === 0}
-                        className={`w-full py-2 rounded-lg font-medium transition-colors ${
-                          product.stockQuantity === 0
-                            ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                            : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                        }`}
+                        className={`w-full py-2 rounded-lg font-medium transition-colors ${product.stockQuantity === 0
+                          ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                          : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                          }`}
                       >
                         {product.stockQuantity === 0
                           ? 'Out of Stock'
@@ -282,18 +280,16 @@ export default function HotelOrderingPage() {
           {/* Cart Sidebar */}
           <div className="lg:col-span-1">
             <div
-              className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity ${
-                showCart ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              }`}
+              className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity ${showCart ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
               onClick={() => setShowCart(false)}
             ></div>
 
             <div
-              className={`fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border z-50 overflow-y-auto transition-transform lg:relative lg:max-w-none lg:w-auto lg:h-auto lg:static lg:border-l lg:border-border lg:rounded-lg lg:p-6 ${
-                showCart
-                  ? 'translate-x-0'
-                  : 'translate-x-full lg:translate-x-0'
-              }`}
+              className={`fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border z-50 overflow-y-auto transition-transform lg:relative lg:max-w-none lg:w-auto lg:h-auto lg:static lg:border-l lg:border-border lg:rounded-lg lg:p-6 ${showCart
+                ? 'translate-x-0'
+                : 'translate-x-full lg:translate-x-0'
+                }`}
             >
               {/* Mobile Close Button */}
               <div className="lg:hidden p-4 border-b border-border flex items-center justify-between">

@@ -1,12 +1,6 @@
 import { getTelegramBot } from '@/lib/services/telegram-bot'
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '1mb',
-    },
-  },
-}
+export const maxDuration = 60
 
 export async function POST(request: Request) {
   try {

@@ -384,3 +384,33 @@ export const inventoryLogs = pgTable('inventory_logs', {
   reason: text('reason'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
+
+export const returnStatusEnum = pgEnum('return_status', ['pending', 'approved', 'rejected', 'completed'])
+
+export const oyruOrderFeedbacks = pgTable('oyru_order_feedbacks', {
+  id: text('id').primaryKey(),
+  orderId: text('orderId').notNull().unique().references(() => oyruOrders.id, { onDelete: 'cascade' }),
+  userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  rating: integer('rating').notNull(),
+  comment: text('comment'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
+export const oyruOrderReturns = pgTable('oyru_order_returns', {
+  id: text('id').primaryKey(),
+  orderId: text('orderId').notNull().unique().references(() => oyruOrders.id, { onDelete: 'cascade' }),
+  userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  reason: text('reason').notNull(),
+  status: returnStatusEnum('status').default('pending'),
+  adminNotes: text('adminNotes'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const oyruOrderReturnItems = pgTable('oyru_order_return_items', {
+  id: text('id').primaryKey(),
+  returnId: text('returnId').notNull().references(() => oyruOrderReturns.id, { onDelete: 'cascade' }),
+  orderItemId: text('orderItemId').notNull().references(() => oyruOrderItems.id, { onDelete: 'cascade' }),
+  quantity: integer('quantity').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})

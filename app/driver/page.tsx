@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -49,9 +50,9 @@ export default function DriverDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-lg">
-                <Truck className="w-6 h-6 text-primary-foreground" />
-              </div>
+              <span className="relative w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 shadow">
+                <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="36px" priority />
+              </span>
               <h1 className="text-2xl font-bold text-foreground">Driver Hub</h1>
             </div>
             <div className="flex gap-2">

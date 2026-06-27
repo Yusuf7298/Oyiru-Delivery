@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getRestaurantOwnerRestaurants } from '@/app/actions/restaurant-orders'
@@ -31,9 +32,9 @@ export default function RestaurantDashboard() {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-2xl">
-            <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold">
-              Oy
-            </div>
+            <span className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 shadow">
+              <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="32px" />
+            </span>
             <span className="hidden sm:inline">Oyru Restaurant</span>
           </Link>
           <Link href="/profile">
@@ -84,8 +85,8 @@ export default function RestaurantDashboard() {
                   </div>
                   <div
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${restaurant.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
                       }`}
                   >
                     {restaurant.isActive ? 'Active' : 'Inactive'}
