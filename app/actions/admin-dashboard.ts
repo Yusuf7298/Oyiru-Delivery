@@ -2,25 +2,25 @@
 
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { usersProfile, orders, restaurants, deliveryPartners, dailyAnalytics, user } from '@/lib/db/schema'
+import { usersProfile, orders, restaurants, deliveryPartners, dailyAnalytics, user, supportTickets, oyruOrders } from '@/lib/db/schema'
 import { eq, desc, and, gte, lte, sql } from 'drizzle-orm'
 import { headers } from 'next/headers'
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) throw new Error('Unauthorized')
-  
+
   // Enforce admin role
   const profile = await db
     .select()
     .from(usersProfile)
     .where(eq(usersProfile.userId, session.user.id))
     .limit(1)
-    
+
   if (profile[0]?.role !== 'admin' && profile[0]?.role !== 'super_admin') {
     throw new Error('Forbidden: Admin access required')
   }
-  
+
   return session.user.id
 }
 
@@ -213,4 +213,97 @@ export async function getOrderById(orderId: string) {
     .from(orders)
     .where(eq(orders.id, orderId))
     .then((result) => result[0])
+}
+
+// Dashboard stats with real period comparison
+export async function getDashboardStatsWithTrend() {
+  const userId = await getUserId()
+
+  const now = new Date()
+  const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0)
+  const periodStart = new Date(now); periodStart.setDate(now.getDate() - 30)
+  const prevPeriodStart = new Date(now); prevPeriodStart.setDate(now.getDate() - 60)
+  const prevPeriodEnd = new Date(now); prevPeriodEnd.setDate(now.getDate() - 30)
+
+  const [
+    currentOrders,
+    prevOrders,
+    currentRevenue,
+    prevRevenue,
+    totalCustomers,
+    prevCustomers,
+    todayOrdersCount,
+    todayRevenueCount,
+  ] = await Promise.all([
+    db.select({ count: sql`COUNT(*)` }).from(oyruOrders).where(gte(oyruOrders.createdAt, periodStart)),
+    db.select({ count: sql`COUNT(*)` }).from(oyruOrders).where(and(gte(oyruOrders.createdAt, prevPeriodStart), lte(oyruOrders.createdAt, prevPeriodEnd))),
+    db.select({ total: sql`COALESCE(SUM(CAST("totalAmount" AS NUMERIC)), 0)` }).from(oyruOrders).where(gte(oyruOrders.createdAt, periodStart)),
+    db.select({ total: sql`COALESCE(SUM(CAST("totalAmount" AS NUMERIC)), 0)` }).from(oyruOrders).where(and(gte(oyruOrders.createdAt, prevPeriodStart), lte(oyruOrders.createdAt, prevPeriodEnd))),
+    db.select({ count: sql`COUNT(*)` }).from(usersProfile).where(eq(usersProfile.role, 'customer')),
+    db.select({ count: sql`COUNT(*)` }).from(usersProfile).where(and(eq(usersProfile.role, 'customer'), lte(usersProfile.createdAt, prevPeriodEnd))),
+    db.select({ count: sql`COUNT(*)` }).from(oyruOrders).where(gte(oyruOrders.createdAt, todayStart)),
+    db.select({ total: sql`COALESCE(SUM(CAST("totalAmount" AS NUMERIC)), 0)` }).from(oyruOrders).where(gte(oyruOrders.createdAt, todayStart)),
+  ])
+
+  const currOrders = Number(currentOrders[0]?.count || 0)
+  const prevOrd = Number(prevOrders[0]?.count || 0)
+  const currRev = Number(currentRevenue[0]?.total || 0)
+  const prevRev = Number(prevRevenue[0]?.total || 0)
+  const currCustomers = Number(totalCustomers[0]?.count || 0)
+  const prevCust = Number(prevCustomers[0]?.count || 0)
+
+  const pct = (curr: number, prev: number) =>
+    prev === 0 ? (curr > 0 ? 100 : 0) : Math.round(((curr - prev) / prev) * 100)
+
+  return {
+    totalOrders: currOrders,
+    totalRevenue: currRev,
+    totalCustomers: currCustomers,
+    todayOrders: Number(todayOrdersCount[0]?.count || 0),
+    todayRevenue: Number(todayRevenueCount[0]?.total || 0),
+    avgOrderValue: currOrders > 0 ? currRev / currOrders : 0,
+    trends: {
+      orders: pct(currOrders, prevOrd),
+      revenue: pct(currRev, prevRev),
+      customers: pct(currCustomers, prevCust),
+      avgOrderValue: currOrders > 0 && prevOrd > 0
+        ? pct(currRev / currOrders, prevRev / prevOrd)
+        : 0,
+    },
+  }
+}
+
+// Get all support tickets from DB
+export async function getAllSupportTickets(page = 1, limit = 20) {
+  const userId = await getUserId()
+  const offset = (page - 1) * limit
+
+  const ticketsList = await db
+    .select()
+    .from(supportTickets)
+    .orderBy(desc(supportTickets.createdAt))
+    .limit(limit)
+    .offset(offset)
+
+  const countResult = await db
+    .select({ count: sql`COUNT(*)` })
+    .from(supportTickets)
+
+  return {
+    tickets: ticketsList,
+    total: Number(countResult[0]?.count || 0),
+    pages: Math.ceil(Number(countResult[0]?.count || 0) / limit),
+  }
+}
+
+// Update support ticket status
+export async function updateSupportTicketStatus(ticketId: string, status: string) {
+  const userId = await getUserId()
+
+  await db
+    .update(supportTickets)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(supportTickets.id, ticketId))
+
+  return { success: true }
 }

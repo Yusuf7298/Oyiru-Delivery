@@ -152,7 +152,7 @@ export default function AdminDashboard() {
                 />
                 <StatCard
                   label="Today Revenue"
-                  value={`$${stats?.todayRevenue?.toFixed(2)}`}
+                  value={`${stats?.todayRevenue?.toFixed(2)} Birr`}
                   icon={TrendingUp}
                   color="bg-teal-500"
                 />
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
                         <tr key={order.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
                           <td className="py-3 px-4 text-sm font-mono">{order.id.substring(0, 8)}</td>
                           <td className="py-3 px-4 text-sm">{order.userId.substring(0, 8)}</td>
-                          <td className="py-3 px-4 text-sm font-semibold">${order.totalAmount?.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-sm font-semibold">{parseFloat(order.totalAmount).toFixed(2)} Birr</td>
                           <td className="py-3 px-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
                               {order.status}

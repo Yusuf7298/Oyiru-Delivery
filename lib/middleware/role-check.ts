@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { usersProfile } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
-export type UserRole = 'customer' | 'admin' | 'delivery_partner' | 'restaurant_owner' | 'super_admin'
+export type UserRole = 'customer' | 'admin' | 'delivery_partner' | 'delivery' | 'restaurant_owner' | 'super_admin' | 'hotel'
 
 export interface AuthContext {
   userId: string
@@ -77,3 +77,14 @@ export async function apiUnauthorized(message = 'Unauthorized') {
 export async function apiForbidden(message = 'Forbidden') {
   return Response.json({ error: message }, { status: 403 })
 }
+
+export function requireHotel(auth: AuthContext | null): boolean {
+  if (!requireAuth(auth)) return false
+  return auth.role === 'hotel'
+}
+
+export function requireDelivery(auth: AuthContext | null): boolean {
+  if (!requireAuth(auth)) return false
+  return auth.role === 'delivery' || auth.role === 'delivery_partner'
+}
+

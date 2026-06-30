@@ -66,10 +66,10 @@ export default function TelegramOrders() {
                   </div>
                   <span
                     className={`text-xs font-semibold px-2 py-1 rounded-full ${order.status === 'delivered'
-                        ? 'bg-green-50 text-green-700'
-                        : order.status === 'cancelled'
-                          ? 'bg-red-50 text-red-700'
-                          : 'bg-blue-50 text-blue-700'
+                      ? 'bg-green-50 text-green-700'
+                      : order.status === 'cancelled'
+                        ? 'bg-red-50 text-red-700'
+                        : 'bg-blue-50 text-blue-700'
                       }`}
                   >
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -77,7 +77,7 @@ export default function TelegramOrders() {
                 </div>
 
                 <p className="text-sm text-muted-foreground mb-3">
-                  {order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''} • ${order.totalAmount.toFixed(2)}
+                  {order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''} • {parseFloat(order.totalAmount).toFixed(2)} Birr
                 </p>
 
                 <div className="flex items-center justify-between">

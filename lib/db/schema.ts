@@ -54,7 +54,7 @@ export const verification = pgTable('verification', {
 })
 
 // --- Enums ---
-export const userRoleEnum = pgEnum('user_role', ['customer', 'restaurant_owner', 'delivery_partner', 'admin', 'super_admin'])
+export const userRoleEnum = pgEnum('user_role', ['customer', 'restaurant_owner', 'delivery_partner', 'delivery', 'admin', 'super_admin', 'hotel']);
 export const orderStatusEnum = pgEnum('order_status', ['pending', 'confirmed', 'packing', 'ready', 'picked_up', 'in_transit', 'delivered', 'cancelled'])
 
 // --- App tables ---
@@ -163,6 +163,12 @@ export const deliveryPartners = pgTable('delivery_partners', {
   totalOrders: integer('totalOrders').default(0),
   totalEarnings: decimal('totalEarnings', { precision: 10, scale: 2 }).default('0'),
   averageRating: decimal('averageRating', { precision: 3, scale: 2 }),
+  serviceType: text('serviceType'),
+  serviceFee: decimal('serviceFee', { precision: 10, scale: 2 }),
+  birthPlace: text('birthPlace'),
+  guarantorName: text('guarantorName'),
+  guarantorPhone: text('guarantorPhone'),
+  agreementPdfUrl: text('agreementPdfUrl'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
@@ -279,6 +285,7 @@ export const dailyAnalytics = pgTable('daily_analytics', {
 
 export const paymentMethodEnum = pgEnum('payment_method', ['COD', 'INVOICE'])
 export const deliveryStatusEnum = pgEnum('delivery_status', ['assigned', 'picked_up', 'in_transit', 'delivered'])
+export const oyruOrderStatusEnum = pgEnum('oyru_order_status', ['draft', 'submitted', 'inventory_review', 'approved', 'assigned', 'shipped', 'delivered', 'completed', 'cancelled'])
 
 export const categories_oyru = pgTable('oyru_categories', {
   id: text('id').primaryKey(),
@@ -316,11 +323,19 @@ export const customerProfiles = pgTable('customer_profiles', {
 
 export const hotelAccounts = pgTable('hotel_accounts', {
   id: text('id').primaryKey(),
+  userId: text('userId').references(() => user.id, { onDelete: 'cascade' }),
   companyName: text('companyName').notNull(),
   contactPerson: text('contactPerson'),
+  ownerFullName: text('ownerFullName'),
   email: text('email').unique(),
   phone: text('phone'),
+  address: text('address'),
   billingType: text('billingType').default('INVOICE'),
+  agreementDuration: text('agreementDuration'),
+  agreementStartDate: timestamp('agreementStartDate'),
+  agreementEndDate: timestamp('agreementEndDate'),
+  basePaymentAmount: decimal('basePaymentAmount', { precision: 10, scale: 2 }),
+  telegramChatId: text('telegramChatId'),
   isActive: boolean('isActive').default(true),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
@@ -351,7 +366,7 @@ export const oyruOrders = pgTable('oyru_orders', {
   paymentMethod: paymentMethodEnum('paymentMethod').default('COD'),
   deliveryAddress: text('deliveryAddress').notNull(),
   deliveryNotes: text('deliveryNotes'),
-  status: text('status').default('pending'),
+  status: oyruOrderStatusEnum('status').default('draft'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
@@ -412,5 +427,46 @@ export const oyruOrderReturnItems = pgTable('oyru_order_return_items', {
   returnId: text('returnId').notNull().references(() => oyruOrderReturns.id, { onDelete: 'cascade' }),
   orderItemId: text('orderItemId').notNull().references(() => oyruOrderItems.id, { onDelete: 'cascade' }),
   quantity: integer('quantity').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
+export const hotelProductAgreements = pgTable('hotel_product_agreements', {
+  id: text('id').primaryKey(),
+  hotelId: text('hotelId').notNull().references(() => hotelAccounts.id, { onDelete: 'cascade' }),
+  productId: text('productId').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  agreedPrice: decimal('agreedPrice', { precision: 10, scale: 2 }).notNull(),
+  unit: text('unit').default('kg'),
+  isActive: boolean('isActive').default(true),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const adminProfiles = pgTable('admin_profiles', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull().unique().references(() => user.id, { onDelete: 'cascade' }),
+  startDate: timestamp('startDate'),
+  positionTitle: text('positionTitle'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const deliveryProfiles = pgTable('delivery_profiles', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull().unique().references(() => user.id, { onDelete: 'cascade' }),
+  phoneNumber: text('phoneNumber'),
+  vehicleType: text('vehicleType'),
+  isAvailable: boolean('isAvailable').default(true),
+  telegramChatId: text('telegramChatId'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const orderStatusHistory = pgTable('order_status_history', {
+  id: text('id').primaryKey(),
+  orderId: text('orderId').notNull().references(() => oyruOrders.id, { onDelete: 'cascade' }),
+  fromStatus: text('fromStatus'),
+  toStatus: text('toStatus').notNull(),
+  changedBy: text('changedBy').references(() => user.id),
+  reason: text('reason'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })

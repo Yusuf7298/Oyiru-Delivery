@@ -61,7 +61,7 @@ export async function createProductOrder(data: {
         totalAmount: total.toString(),
         deliveryAddress: fullAddress,
         deliveryNotes: notes,
-        status: 'pending',
+        status: 'draft',
       })
 
       // Insert order items

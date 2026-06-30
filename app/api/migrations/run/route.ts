@@ -1,13 +1,21 @@
 import { pool } from '@/lib/db'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import { getAuthContext, requireAdmin } from '@/lib/middleware/role-check'
 
 export async function GET() {
+  // Block entirely in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Disabled in production' }, { status: 403 })
+  }
+
+  const authContext = await getAuthContext()
+  if (!authContext) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (authContext.role !== 'super_admin') {
+    return NextResponse.json({ error: 'Forbidden: super_admin only' }, { status: 403 })
+  }
+
   const client = await pool.connect()
-
   try {
-    console.log('[v0] Starting product_orders migration...')
-
-    // Create product_orders table
     await client.query(`
       CREATE TABLE IF NOT EXISTS product_orders (
         id TEXT PRIMARY KEY,
@@ -20,13 +28,9 @@ export async function GET() {
         address TEXT NOT NULL,
         phone TEXT NOT NULL,
         "createdAt" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
-        FOREIGN KEY ("customerId") REFERENCES "user"(id)
+        "updatedAt" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
       )
     `)
-    console.log('[v0] product_orders table created')
-
-    // Create product_order_items table
     await client.query(`
       CREATE TABLE IF NOT EXISTS product_order_items (
         id TEXT PRIMARY KEY,
@@ -35,34 +39,15 @@ export async function GET() {
         quantity INTEGER NOT NULL,
         "unitPrice" NUMERIC(10,2) NOT NULL,
         "createdAt" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
-        FOREIGN KEY ("orderId") REFERENCES product_orders(id) ON DELETE CASCADE,
-        FOREIGN KEY ("productId") REFERENCES products(id)
+        FOREIGN KEY ("orderId") REFERENCES product_orders(id) ON DELETE CASCADE
       )
     `)
-    console.log('[v0] product_order_items table created')
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_product_orders_customer ON product_orders("customerId")`)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_product_order_items_order ON product_order_items("orderId")`)
 
-    // Create indexes
-    await client.query(
-      `CREATE INDEX IF NOT EXISTS idx_product_orders_customer ON product_orders("customerId")`
-    )
-    await client.query(
-      `CREATE INDEX IF NOT EXISTS idx_product_order_items_order ON product_order_items("orderId")`
-    )
-    console.log('[v0] Indexes created')
-
-    return NextResponse.json({
-      success: true,
-      message: 'Migration completed successfully',
-    })
+    return NextResponse.json({ success: true, message: 'Migration completed' })
   } catch (error) {
-    console.error('[v0] Migration failed:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   } finally {
     client.release()
   }

@@ -1,12 +1,11 @@
 import { Telegraf, Context } from 'telegraf'
 import { db } from '@/lib/db'
-import { usersProfile } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { oyruOrders } from '@/lib/db/schema'
+import { desc } from 'drizzle-orm'
 
 export interface TelegramContext extends Context {
   session?: {
     userId?: string
-    cartItems?: any[]
   }
 }
 
@@ -22,82 +21,109 @@ export class TelegramBotService {
   }
 
   public setupHandlers() {
-    // Start command
     this.bot.start(async (ctx) => {
-      const chatId = ctx.chat?.id
-      console.log('[v0] Telegram /start from chat:', chatId)
-
-      await ctx.reply(`
-🎉 Welcome to Oyru Delivery!
-
-Select an option below:
-      `)
-
+      await ctx.reply(
+        '🎉 Welcome to *Oyru Delivery!*\n\nOrder groceries and essentials delivered to your door.',
+        { parse_mode: 'Markdown' }
+      )
       await this.showMainMenu(ctx)
     })
 
-    // Products command
     this.bot.command('products', async (ctx) => {
       await ctx.reply('📦 Browse our products by category:')
       await this.showProductsMenu(ctx)
     })
 
-    // Search command
-    this.bot.command('search', async (ctx) => {
-      const searchQuery = ctx.message.text?.replace('/search', '').trim()
-      if (!searchQuery) {
-        await ctx.reply('Please provide a search term: /search <product_name>')
-        return
-      }
-
-      await ctx.reply(`Searching for products: "${searchQuery}"...`)
-      // TODO: Implement product search
-    })
-
-    // Cart command
     this.bot.command('cart', async (ctx) => {
-      await ctx.reply('🛒 Your Cart:')
-      // TODO: Implement cart display
+      await ctx.reply(
+        '🛒 *Your Cart*\n\n' +
+        'Cart is managed in your browser session.\n' +
+        'Visit the Oyru web app to view and checkout your cart.\n\n' +
+        'Use /orders to see your order history.',
+        { parse_mode: 'Markdown' }
+      )
     })
 
-    // Orders command
     this.bot.command('orders', async (ctx) => {
-      await ctx.reply('📋 Your Orders:')
-      // TODO: Implement orders display
-    })
+      try {
+        const recentOrders = await db
+          .select({
+            id: oyruOrders.id,
+            orderNumber: oyruOrders.orderNumber,
+            totalAmount: oyruOrders.totalAmount,
+            status: oyruOrders.status,
+            createdAt: oyruOrders.createdAt,
+          })
+          .from(oyruOrders)
+          .orderBy(desc(oyruOrders.createdAt))
+          .limit(5)
 
-    // Help command
-    this.bot.command('help', async (ctx) => {
-      await ctx.reply(`
-📱 Available Commands:
+        if (recentOrders.length === 0) {
+          await ctx.reply(
+            '📋 *No orders found.*\n\nPlace your first order through the Oyru web app!',
+            { parse_mode: 'Markdown' }
+          )
+          return
+        }
 
-/start - Start the bot
-/products - Browse products
-/search <query> - Search products
-/cart - View your cart
-/orders - View your orders
-/help - Show this help message
+        const statusEmoji: Record<string, string> = {
+          pending: '⏳', confirmed: '✅', delivered: '📦',
+          cancelled: '❌', in_transit: '🚚', packing: '🎁', picked_up: '🏃',
+        }
 
-Need assistance? Contact our support team!
-      `)
-    })
+        const lines = recentOrders.map(o => {
+          const emoji = statusEmoji[o.status || 'pending'] || '📋'
+          return `${emoji} *#${o.orderNumber}*\n   ${parseFloat(o.totalAmount).toFixed(2)} Birr — ${o.status}\n   ${new Date(o.createdAt).toLocaleDateString()}`
+        }).join('\n\n')
 
-    // Handle text messages
-    this.bot.on('text', async (ctx) => {
-      const text = ctx.message.text
-
-      if (text?.includes('📦 Products')) {
-        await this.showProductsMenu(ctx)
-      } else if (text?.includes('🛒 Cart')) {
-        await ctx.reply('Your cart is empty. Start shopping to add items!')
-      } else if (text?.includes('📋 Orders')) {
-        await ctx.reply('You have no orders yet.')
-      } else {
-        await this.showMainMenu(ctx)
+        await ctx.reply(
+          `📋 *Recent Orders*\n\n${lines}`,
+          { parse_mode: 'Markdown' }
+        )
+      } catch (error) {
+        console.error('[v0] Telegram orders command error:', error)
+        await ctx.reply('Could not fetch orders. Please try again.')
       }
     })
 
-    // Error handler
+    this.bot.command('help', async (ctx) => {
+      await ctx.reply(
+        '📱 *Available Commands:*\n\n' +
+        '/start — Welcome message\n' +
+        '/products — Browse product categories\n' +
+        '/cart — View your cart info\n' +
+        '/orders — View recent orders\n' +
+        '/help — Show this help message\n\n' +
+        'Need help? Contact support@oyru.com',
+        { parse_mode: 'Markdown' }
+      )
+    })
+
+    this.bot.on('callback_query', async (ctx) => {
+      const data = (ctx.callbackQuery as any).data as string
+      await ctx.answerCbQuery()
+
+      if (data === 'products') {
+        await this.showProductsMenu(ctx)
+      } else if (data === 'orders') {
+        await ctx.reply('Use /orders to see your order history.')
+      } else if (data === 'help') {
+        await ctx.reply('Use /help for all commands.')
+      } else if (data?.startsWith('cat_')) {
+        const catMap: Record<string, string> = {
+          cat_produce: '🥬 Fresh Produce', cat_dairy: '🥛 Dairy & Eggs',
+          cat_beverages: '🥤 Beverages', cat_snacks: '🍪 Snacks', cat_essentials: '🛒 Essentials',
+        }
+        await ctx.reply(
+          `${catMap[data] || 'Category'} selected.\n\nVisit the Oyru web app to browse and order.`
+        )
+      }
+    })
+
+    this.bot.on('text', async (ctx) => {
+      await this.showMainMenu(ctx)
+    })
+
     this.bot.catch((err, ctx) => {
       console.error('[v0] Telegram bot error:', err)
       ctx.reply('Sorry, an error occurred. Please try again.')
@@ -105,61 +131,35 @@ Need assistance? Contact our support team!
   }
 
   private async showMainMenu(ctx: TelegramContext) {
-    await ctx.reply(
-      'What would you like to do?',
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '📦 Products', callback_data: 'products' },
-              { text: '🛒 Cart', callback_data: 'cart' },
-            ],
-            [
-              { text: '📋 Orders', callback_data: 'orders' },
-              { text: '❓ Help', callback_data: 'help' },
-            ],
+    await ctx.reply('What would you like to do?', {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '📦 Products', callback_data: 'products' },
+            { text: '📋 Orders', callback_data: 'orders' },
           ],
-        },
-      }
-    )
+          [{ text: '❓ Help', callback_data: 'help' }],
+        ],
+      },
+    })
   }
 
   private async showProductsMenu(ctx: TelegramContext) {
-    await ctx.reply(
-      'Select a category:',
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '🥬 Fresh Produce', callback_data: 'cat_produce' },
-              { text: '🥛 Dairy & Eggs', callback_data: 'cat_dairy' },
-            ],
-            [
-              { text: '🥤 Beverages', callback_data: 'cat_beverages' },
-              { text: '🍪 Snacks', callback_data: 'cat_snacks' },
-            ],
-            [{ text: '🛒 Essentials', callback_data: 'cat_essentials' }],
+    await ctx.reply('Select a category:', {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '🥬 Fresh Produce', callback_data: 'cat_produce' },
+            { text: '🥛 Dairy & Eggs', callback_data: 'cat_dairy' },
           ],
-        },
-      }
-    )
-  }
-
-  public async linkTelegramUser(telegramChatId: number, userId: string) {
-    try {
-      const profile = await db
-        .select()
-        .from(usersProfile)
-        .where(eq(usersProfile.userId, userId))
-        .limit(1)
-
-      if (profile.length) {
-        // TODO: Update profile with telegramChatId when schema supports it
-        console.log('[v0] Linked Telegram user:', telegramChatId, 'to userId:', userId)
-      }
-    } catch (error) {
-      console.error('[v0] Error linking Telegram user:', error)
-    }
+          [
+            { text: '🥤 Beverages', callback_data: 'cat_beverages' },
+            { text: '🍪 Snacks', callback_data: 'cat_snacks' },
+          ],
+          [{ text: '🛒 Essentials', callback_data: 'cat_essentials' }],
+        ],
+      },
+    })
   }
 
   public async sendMessage(chatId: number, message: string) {
@@ -171,15 +171,16 @@ Need assistance? Contact our support team!
   }
 
   public async sendOrderUpdate(chatId: number, orderNumber: string, status: string) {
-    const message = `
-📦 Order Update
+    const emoji: Record<string, string> = {
+      pending: '⏳', confirmed: '✅', packing: '📦',
+      ready: '🟢', picked_up: '🏃', in_transit: '🚚', delivered: '🎉', cancelled: '❌',
+    }
+    const message =
+      `${emoji[status] || '📋'} *Order Update*\n\n` +
+      `Order: *#${orderNumber}*\n` +
+      `Status: *${status.replace(/_/g, ' ').toUpperCase()}*`
 
-Order #${orderNumber}
-Status: ${status}
-
-Track your order with /orders
-    `
-    await this.sendMessage(chatId, message)
+    await this.bot.telegram.sendMessage(chatId, message, { parse_mode: 'Markdown' })
   }
 
   public getBot() {
@@ -196,12 +197,11 @@ Track your order with /orders
   }
 }
 
-// Singleton instance
 let botService: TelegramBotService | null = null
 
 export function getTelegramBot(): TelegramBotService {
   if (!botService) {
     botService = new TelegramBotService()
   }
-  return botService
+  return botService!
 }

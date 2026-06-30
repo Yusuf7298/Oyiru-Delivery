@@ -22,6 +22,7 @@ export default function TelegramCheckout() {
   const router = useRouter()
   const { cart, clearCart, getCartTotal } = useCart()
   const [loading, setLoading] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     deliveryAddress: '',
     deliveryCity: '',
@@ -62,10 +63,12 @@ export default function TelegramCheckout() {
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault()
     const WebApp = getWebApp()
+    setFormError(null)
 
     if (!formData.deliveryAddress || !formData.deliveryCity || !formData.phoneNumber) {
-      if (WebApp) WebApp.showAlert('Please fill in all required fields')
-      else alert('Please fill in all required fields')
+      const msg = 'Please fill in all required fields'
+      if (WebApp) WebApp.showAlert(msg)
+      else setFormError(msg)
       return
     }
 
@@ -85,13 +88,15 @@ export default function TelegramCheckout() {
         if (WebApp) WebApp.showAlert('Order placed successfully!')
         router.push(`/order-confirmation/${result.orderId}`)
       } else {
-        if (WebApp) WebApp.showAlert('Failed to place order: ' + result.message)
-        else alert('Failed to place order: ' + result.message)
+        const msg = 'Failed to place order: ' + result.message
+        if (WebApp) WebApp.showAlert(msg)
+        else setFormError(msg)
       }
     } catch (error) {
       console.error('Error placing order:', error)
-      if (WebApp) WebApp.showAlert('An error occurred while placing your order')
-      else alert('An error occurred')
+      const msg = 'An error occurred while placing your order'
+      if (WebApp) WebApp.showAlert(msg)
+      else setFormError(msg)
     } finally {
       setLoading(false)
     }
@@ -118,27 +123,27 @@ export default function TelegramCheckout() {
             {cart.items.map((item) => (
               <div key={item.productId} className="flex items-center justify-between text-sm">
                 <span>{item.name} x{item.quantity}</span>
-                <span>${(item.price * item.quantity).toFixed(2)}</span>
+                <span>{(item.price * item.quantity).toFixed(2)} Birr</span>
               </div>
             ))}
           </div>
           <div className="space-y-2 mb-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>{subtotal.toFixed(2)} Birr</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Delivery Fee</span>
-              <span>${deliveryFee.toFixed(2)}</span>
+              <span>{deliveryFee.toFixed(2)} Birr</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Tax (5%)</span>
-              <span>${tax.toFixed(2)}</span>
+              <span>{tax.toFixed(2)} Birr</span>
             </div>
           </div>
           <div className="pt-4 border-t border-border flex items-center justify-between font-bold">
             <span>Total</span>
-            <span className="text-primary text-lg">${total.toFixed(2)}</span>
+            <span className="text-primary text-lg">{total.toFixed(2)} Birr</span>
           </div>
         </div>
 
@@ -195,8 +200,14 @@ export default function TelegramCheckout() {
           </div>
 
           <Button type="submit" disabled={loading} className="w-full py-3 font-semibold">
-            {loading ? 'Placing Order...' : `Place Order - $${total.toFixed(2)}`}
+            {loading ? 'Placing Order...' : `Place Order - ${total.toFixed(2)} Birr`}
           </Button>
+
+          {formError && (
+            <p className="text-sm text-destructive font-medium bg-destructive/10 px-4 py-2 rounded-xl text-center">
+              {formError}
+            </p>
+          )}
 
           <Link href="/twa" className="block">
             <Button variant="outline" className="w-full">Continue Shopping</Button>

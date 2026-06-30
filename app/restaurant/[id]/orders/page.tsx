@@ -89,7 +89,7 @@ export default function RestaurantOrdersPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-primary">
-                      ${parseFloat(order.totalAmount).toFixed(2)}
+                      {parseFloat(order.totalAmount).toFixed(2)} Birr
                     </div>
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-sm font-semibold mt-1 ${statusColors[order.status] || 'bg-gray-100'
@@ -126,12 +126,12 @@ export default function RestaurantOrdersPage() {
                           onClick={() => isNextStatus && handleStatusUpdate(order.id, status)}
                           disabled={!isNextStatus || updating === order.id}
                           className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${isCurrentStatus
-                              ? 'bg-primary text-white'
-                              : isPastStatus
-                                ? 'bg-green-100 text-green-800 cursor-default'
-                                : isNextStatus
-                                  ? 'bg-secondary hover:bg-secondary/80 cursor-pointer'
-                                  : 'bg-muted text-muted-foreground cursor-default'
+                            ? 'bg-primary text-white'
+                            : isPastStatus
+                              ? 'bg-green-100 text-green-800 cursor-default'
+                              : isNextStatus
+                                ? 'bg-secondary hover:bg-secondary/80 cursor-pointer'
+                                : 'bg-muted text-muted-foreground cursor-default'
                             } ${updating === order.id ? 'opacity-50' : ''}`}
                         >
                           {status.replace('_', ' ')}

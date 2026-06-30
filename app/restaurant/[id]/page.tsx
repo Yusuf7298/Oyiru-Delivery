@@ -138,8 +138,8 @@ export default function RestaurantPage() {
                     key={category.id}
                     onClick={() => handleCategoryChange(category.id)}
                     className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${selectedCategory === category.id
-                        ? 'bg-primary text-white'
-                        : 'bg-secondary text-foreground hover:bg-secondary/80'
+                      ? 'bg-primary text-white'
+                      : 'bg-secondary text-foreground hover:bg-secondary/80'
                       }`}
                   >
                     {category.name}
@@ -157,7 +157,7 @@ export default function RestaurantPage() {
                       <h3 className="font-semibold text-lg mb-1">{dish.name}</h3>
                       <p className="text-sm text-muted-foreground mb-3">{dish.description}</p>
                       <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-primary">${dish.price}</span>
+                        <span className="text-lg font-bold text-primary">{parseFloat(dish.price).toFixed(2)} Birr</span>
                         {dish.preparationTime && (
                           <span className="text-xs text-muted-foreground">{dish.preparationTime} min prep</span>
                         )}
@@ -197,22 +197,22 @@ export default function RestaurantPage() {
                     {cart.items.map((item) => (
                       <div key={item.productId} className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{item.name} x{item.quantity}</span>
-                        <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                        <span className="font-semibold">{(item.price * item.quantity).toFixed(2)} Birr</span>
                       </div>
                     ))}
                   </div>
                   <div className="border-t border-border pt-4 mb-6">
                     <div className="flex justify-between mb-2">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-semibold">${getTotalPrice().toFixed(2)}</span>
+                      <span className="font-semibold">{getTotalPrice().toFixed(2)} Birr</span>
                     </div>
                     <div className="flex justify-between mb-2">
                       <span className="text-muted-foreground">Delivery</span>
-                      <span className="font-semibold">${(parseFloat(restaurant.deliveryFee) || 0).toFixed(2)}</span>
+                      <span className="font-semibold">{(parseFloat(restaurant.deliveryFee) || 0).toFixed(2)} Birr</span>
                     </div>
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span className="text-primary">${(getTotalPrice() + (parseFloat(restaurant.deliveryFee) || 0)).toFixed(2)}</span>
+                      <span className="text-primary">{(getTotalPrice() + (parseFloat(restaurant.deliveryFee) || 0)).toFixed(2)} Birr</span>
                     </div>
                   </div>
                   <Link href="/checkout">

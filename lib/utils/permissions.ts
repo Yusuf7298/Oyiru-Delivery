@@ -13,6 +13,12 @@ export type Permission =
   | 'create_orders'
   | 'accept_deliveries'
   | 'view_own_deliveries'
+  | 'manage_agreements'
+  | 'approve_orders'
+  | 'assign_drivers'
+  | 'update_delivery_status'
+  | 'view_hotel_dashboard'
+  | 'view_delivery_dashboard'
 
 export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   customer: ['view_own_orders', 'create_orders'],
@@ -38,6 +44,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     'view_reports',
     'manage_settings',
   ],
+  hotel: ['view_hotel_dashboard', 'view_own_orders', 'create_orders'],
+  delivery: ['view_delivery_dashboard', 'accept_deliveries', 'view_own_deliveries', 'update_delivery_status'],
 }
 
 export function hasPermission(auth: AuthContext | null, permission: Permission): boolean {
@@ -82,6 +90,9 @@ export function canAccessOrderData(auth: AuthContext | null, orderUserId: string
   // Customers can access their own orders
   if (auth.role === 'customer' && orderUserId === auth.userId) return true
 
+  // Hotel users can access their own orders
+  if (auth.role === 'hotel' && orderUserId === auth.userId) return true
+
   return false
 }
 
@@ -91,10 +102,8 @@ export function canAccessHotelData(auth: AuthContext | null, hotelId: string): b
   // Admins can access any hotel data
   if (auth.role === 'admin' || auth.role === 'super_admin') return true
 
-  // TODO: Add hotel owner role check when implemented
-  // if (auth.role === 'hotel_owner') {
-  //   return await isOwnerOfHotel(auth.userId, hotelId)
-  // }
+  // Hotel role users can access hotel data
+  if (auth.role === 'hotel') return true
 
   return false
 }
@@ -106,7 +115,7 @@ export function canAccessDeliveryData(auth: AuthContext | null, driverId: string
   if (auth.role === 'admin' || auth.role === 'super_admin') return true
 
   // Drivers can access their own deliveries
-  if (auth.role === 'delivery_partner' && auth.userId === driverId) return true
+  if ((auth.role === 'delivery_partner' || auth.role === 'delivery') && auth.userId === driverId) return true
 
   return false
 }

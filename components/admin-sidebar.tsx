@@ -24,22 +24,12 @@ export function AdminSidebar({ role }: { role?: string }) {
   const pathname = usePathname()
 
   const navItems = [
-    { name: 'Storefront', href: '/', icon: Home },
     { name: 'Overview', href: '/admin', icon: BarChart3 },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Feedbacks', href: '/admin/feedbacks', icon: MessageSquare },
-    { name: 'Returns', href: '/admin/returns', icon: RotateCcw },
-    { name: 'Customers', href: '/admin/customers', icon: Users },
-    { name: 'Restaurants', href: '/admin/restaurants', icon: Store },
-    { name: 'Delivery Partners', href: '/admin/delivery-partners', icon: Truck },
-    { name: 'Analytics', href: '/admin/reports', icon: LineChart },
-    { name: 'Support Tickets', href: '/admin/support', icon: LifeBuoy },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
+    { name: 'Inventory', href: '/admin/inventory', icon: Store },
+    { name: 'Approvals / Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Shipments', href: '/admin/orders', icon: Truck },
+    { name: 'Reports', href: '/admin/reports', icon: LineChart },
   ]
-
-  if (role === 'super_admin') {
-    navItems.push({ name: 'Staff Accounts', href: '/admin/staff', icon: Shield })
-  }
 
   return (
     <div className="w-64 bg-card/50 backdrop-blur-md border-r border-border/50 h-screen sticky top-0 flex flex-col pt-6 pb-4 shadow-xl">

@@ -13,6 +13,7 @@ interface Product {
   description?: string
   stockQuantity: number
   isAvailable: boolean
+  unit?: string
 }
 
 interface Category {
@@ -35,26 +36,25 @@ export default function HotelOrderingPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [cart, setCart] = useState<CartItem[]>([])
   const [showCart, setShowCart] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsRes, categoriesRes] = await Promise.all([
-          fetch('/api/products'),
+        const [agreementsRes, categoriesRes] = await Promise.all([
+          fetch('/api/hotel/agreements'),
           fetch('/api/categories'),
         ])
 
-        if (productsRes.ok) {
-          const data = await productsRes.json()
-          setProducts(data.filter((p: Product) => p.isAvailable))
+        if (agreementsRes.ok) {
+          const data = await agreementsRes.json()
+          setProducts(data.products || [])
         }
 
         if (categoriesRes.ok) {
           const data = await categoriesRes.json()
           setCategories(data)
-          if (data.length > 0) {
-            setSelectedCategory(data[0].id)
-          }
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -121,7 +121,7 @@ export default function HotelOrderingPage() {
 
   const handlePlaceOrder = async () => {
     if (cart.length === 0) {
-      alert('Your cart is empty!')
+      setError('Your cart is empty!')
       return
     }
 
@@ -137,20 +137,34 @@ export default function HotelOrderingPage() {
 
       if (response.ok) {
         const order = await response.json()
-        alert(`Order placed successfully! Order ID: ${order.orderNumber}`)
+        setSuccess(`Order placed! Order ID: ${order.order?.orderNumber || order.orderNumber}`)
         setCart([])
         setShowCart(false)
       } else {
-        alert('Failed to place order')
+        const data = await response.json()
+        setError(data.error || 'Failed to place order')
       }
     } catch (error) {
       console.error('Error placing order:', error)
-      alert('Error placing order')
+      setError('Error placing order. Please try again.')
     }
   }
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Toast notifications */}
+      {error && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-destructive text-destructive-foreground px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 animate-in slide-in-from-top-4">
+          <span className="text-sm font-medium">{error}</span>
+          <button onClick={() => setError(null)} className="ml-2 text-destructive-foreground/70 hover:text-destructive-foreground">✕</button>
+        </div>
+      )}
+      {success && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-green-600 text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 animate-in slide-in-from-top-4">
+          <span className="text-sm font-medium">{success}</span>
+          <button onClick={() => setSuccess(null)} className="ml-2 text-white/70 hover:text-white">✕</button>
+        </div>
+      )}
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -250,11 +264,11 @@ export default function HotelOrderingPage() {
                       )}
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <p className="text-2xl font-bold text-primary">
-                            {Number(product.price).toFixed(2)} Birr
+                          <p className="text-xl font-bold text-primary mb-4">
+                            {Number(product.price).toFixed(2)} Birr / {product.unit || 'kg'}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {product.stockQuantity} in stock
+                            {product.stockQuantity} kg in stock
                           </p>
                         </div>
                       </div>
@@ -268,7 +282,7 @@ export default function HotelOrderingPage() {
                       >
                         {product.stockQuantity === 0
                           ? 'Out of Stock'
-                          : 'Add to Cart'}
+                          : 'Add to Cart (+1kg)'}
                       </button>
                     </div>
                   </div>
@@ -334,8 +348,8 @@ export default function HotelOrderingPage() {
                           >
                             -
                           </button>
-                          <span className="w-8 text-center font-semibold">
-                            {item.quantity}
+                          <span className="w-10 text-center font-semibold text-xs">
+                            {item.quantity} kg
                           </span>
                           <button
                             onClick={() =>

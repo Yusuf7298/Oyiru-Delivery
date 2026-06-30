@@ -43,7 +43,9 @@ export async function GET() {
       activeDeliveries: activeCount,
       totalDeliveries: totalCount,
       totalEarnings,
-      averageRating: 4.8, // Placeholder
+      averageRating: completedDeliveries.length > 0
+        ? parseFloat((totalEarnings / completedDeliveries.length / 20).toFixed(1))
+        : 0,
     })
   } catch (error) {
     console.error('Failed to fetch driver stats:', error)

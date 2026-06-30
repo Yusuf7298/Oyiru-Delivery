@@ -31,7 +31,7 @@ export async function POST(
     // Update order status
     await db
       .update(oyruOrders)
-      .set({ status: 'confirmed' })
+      .set({ status: 'assigned' })
       .where(eq(oyruOrders.id, orderId))
 
     return Response.json(newDelivery[0])

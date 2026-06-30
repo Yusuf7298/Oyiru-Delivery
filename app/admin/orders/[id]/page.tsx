@@ -4,31 +4,41 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { getOrderByIdAdmin, updateOyruOrderStatus } from '@/app/actions/admin'
+import { getB2BOrderDetails, reviewOrderForStock, approveB2BOrder, prepareAndShipOrder, fetchDrivers } from '@/app/actions/b2b-orders'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { ChevronLeft, Package, User, MapPin, Phone, AlertCircle, Clock, CheckCircle2 } from 'lucide-react'
+import { ChevronLeft, Package, User, MapPin, AlertCircle, Clock, CheckCircle2, Truck } from 'lucide-react'
 import React from 'react'
 
 export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter()
-  // React.use allows us to unwrap the promise param correctly in Next.js 15
   const unwrappedParams = React.use(params)
   const orderId = unwrappedParams.id
 
   const [order, setOrder] = useState<any>(null)
+  const [role, setRole] = useState<string>('')
+  const [drivers, setDrivers] = useState<any[]>([])
+  const [selectedDriver, setSelectedDriver] = useState('')
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
 
   useEffect(() => {
     const loadOrder = async () => {
       try {
-        const data = await getOrderByIdAdmin(orderId)
-        if (data) {
-          setOrder(data)
+        const data = await getB2BOrderDetails(orderId)
+        if (data.success && data.order) {
+          setOrder(data.order)
+          setRole(data.role || '')
+          
+          if (data.role === 'admin' || data.role === 'super_admin') {
+            const drv = await fetchDrivers()
+            if (drv.success && drv.drivers) {
+              setDrivers(drv.drivers)
+            }
+          }
         } else {
-          setError('Order not found')
+          setError(data.error || 'Order not found')
         }
       } catch (err) {
         console.error(err)
@@ -41,20 +51,50 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
     loadOrder()
   }, [orderId])
 
-  const handleUpdateStatus = async (newStatus: string) => {
-    try {
-      setUpdating(true)
-      const res = await updateOyruOrderStatus(orderId, newStatus)
-      if (res.success) {
-        setOrder({ ...order, status: newStatus })
-      } else {
-        alert('Failed to update status')
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setUpdating(false)
+  const handleReview = async () => {
+    setUpdating(true)
+    setError('')
+    setSuccessMsg('')
+    const res = await reviewOrderForStock(orderId)
+    if (res.success) {
+      setOrder({ ...order, status: 'manager_reviewed' })
+      setSuccessMsg('Order successfully marked as Manager Reviewed.')
+    } else {
+      setError(res.error || 'Failed to review order')
     }
+    setUpdating(false)
+  }
+
+  const handleApprove = async () => {
+    setUpdating(true)
+    setError('')
+    setSuccessMsg('')
+    const res = await approveB2BOrder(orderId)
+    if (res.success) {
+      setOrder({ ...order, status: 'approved' })
+      setSuccessMsg('Order successfully Approved!')
+    } else {
+      setError(res.error || 'Failed to approve order')
+    }
+    setUpdating(false)
+  }
+
+  const handleShip = async () => {
+    if (!selectedDriver) {
+      setError('Please select a driver first.')
+      return
+    }
+    setUpdating(true)
+    setError('')
+    setSuccessMsg('')
+    const res = await prepareAndShipOrder(orderId, selectedDriver)
+    if (res.success) {
+      setOrder({ ...order, status: 'shipped', delivery: { driverId: selectedDriver } })
+      setSuccessMsg('Order successfully marked as Shipped!')
+    } else {
+      setError(res.error || 'Failed to ship order')
+    }
+    setUpdating(false)
   }
 
   if (loading) {
@@ -65,7 +105,7 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
     )
   }
 
-  if (error || !order) {
+  if (error && !order) {
     return (
       <div className="min-h-screen bg-background p-8">
         <Link href="/admin/orders">
@@ -82,10 +122,22 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
     )
   }
 
-  const statuses = ['pending', 'confirmed', 'packing', 'ready', 'picked_up', 'in_transit', 'delivered', 'cancelled']
-
   return (
     <div className="min-h-screen bg-background p-4 sm:p-8">
+      {/* Notifications */}
+      {error && order && (
+        <div className="max-w-5xl mx-auto mb-4 bg-destructive text-destructive-foreground px-6 py-3 rounded-lg flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError('')}>✕</button>
+        </div>
+      )}
+      {successMsg && (
+        <div className="max-w-5xl mx-auto mb-4 bg-green-600 text-white px-6 py-3 rounded-lg flex items-center justify-between">
+          <span>{successMsg}</span>
+          <button onClick={() => setSuccessMsg('')}>✕</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="max-w-5xl mx-auto mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -100,24 +152,9 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
             </p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-muted-foreground">Update Status:</span>
-          <select 
-            className="bg-card border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-            value={order.status || 'pending'}
-            onChange={(e) => handleUpdateStatus(e.target.value)}
-            disabled={updating}
-          >
-            {statuses.map(s => (
-              <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
-            ))}
-          </select>
-        </div>
       </div>
 
       <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         {/* Left Column: Items */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-6">
@@ -125,7 +162,7 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
               <Package className="w-5 h-5 text-primary" />
               <h2 className="text-lg font-semibold">Order Items</h2>
             </div>
-            
+
             <div className="space-y-4">
               {order.items?.map((item: any) => (
                 <div key={item.id} className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 border border-border/50">
@@ -139,7 +176,7 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
                   <div className="flex-1">
                     <h3 className="font-medium text-foreground">{item.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {parseFloat(item.unitPrice).toFixed(2)} Birr x {item.quantity}
+                      {parseFloat(item.unitPrice).toFixed(2)} Birr x {item.quantity} kg
                     </p>
                   </div>
                   <div className="text-right">
@@ -158,25 +195,69 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
           </Card>
         </div>
 
-        {/* Right Column: Details */}
+        {/* Right Column: Details & Actions */}
         <div className="space-y-6">
-          {/* Status Card */}
+          {/* Status Card & Workflow */}
           <Card className="p-6 bg-gradient-to-br from-card to-card/50">
-            <h2 className="text-sm font-medium text-muted-foreground mb-2">Current Status</h2>
-            <div className="flex items-center gap-2">
+            <h2 className="text-sm font-medium text-muted-foreground mb-4">Current Workflow Status</h2>
+            <div className="flex items-center gap-2 mb-6">
               <CheckCircle2 className="w-5 h-5 text-blue-500" />
               <span className="text-xl font-bold text-blue-500 capitalize">{String(order.status || 'pending').replace('_', ' ')}</span>
             </div>
-          </Card>
 
-          {/* Customer Info */}
-          <Card className="p-6">
-            <h2 className="text-sm font-medium text-muted-foreground mb-4 flex items-center gap-2">
-              <User className="w-4 h-4" /> Customer Information
-            </h2>
-            <div className="space-y-3">
-              <p className="text-foreground font-medium">{order.userId ? 'Registered User' : 'Guest Checkout'}</p>
-              {order.userId && <p className="text-sm text-muted-foreground break-all">ID: {order.userId}</p>}
+            {/* Workflow Actions */}
+            <div className="space-y-4 border-t border-border pt-4">
+              
+              {/* Store Manager Review Action */}
+              {order.status === 'submitted' && (role === 'admin' || role === 'super_admin') && (
+                <div className="bg-secondary/50 p-4 rounded-lg">
+                  <p className="text-sm font-medium mb-2">Store Manager Task</p>
+                  <Button onClick={handleReview} disabled={updating} className="w-full">
+                    Confirm Stock & Review
+                  </Button>
+                </div>
+              )}
+
+              {/* Super Admin Approve Action */}
+              {order.status === 'inventory_review' && role === 'super_admin' && (
+                <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
+                  <p className="text-sm font-medium mb-2 text-primary">Super Admin Task</p>
+                  <Button onClick={handleApprove} disabled={updating} className="w-full">
+                    Finalize & Approve Order
+                  </Button>
+                </div>
+              )}
+
+              {/* Store Manager Ship Action */}
+              {order.status === 'approved' && (role === 'admin' || role === 'super_admin') && (
+                <div className="bg-orange-500/10 p-4 rounded-lg border border-orange-500/20">
+                  <p className="text-sm font-medium mb-2 text-orange-600">Shipment Preparation</p>
+                  <select 
+                    value={selectedDriver} 
+                    onChange={e => setSelectedDriver(e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm mb-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                  >
+                    <option value="">Select a Driver...</option>
+                    {drivers.map(d => (
+                      <option key={d.id} value={d.id}>{d.name} ({d.phone})</option>
+                    ))}
+                  </select>
+                  <Button onClick={handleShip} disabled={updating || !selectedDriver} className="w-full bg-orange-600 hover:bg-orange-700">
+                    <Truck className="w-4 h-4 mr-2" /> Assign Driver & Ship
+                  </Button>
+                </div>
+              )}
+
+              {order.status === 'shipped' && (
+                <div className="bg-green-500/10 p-4 rounded-lg border border-green-500/20">
+                  <p className="text-sm font-medium text-green-600 flex items-center gap-2">
+                    <Truck className="w-4 h-4" /> Order Shipped
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Driver Assigned: {drivers.find(d => d.id === order.delivery?.driverId)?.name || 'Unknown'}
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
 
@@ -198,7 +279,7 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
               )}
             </div>
           </Card>
-          
+
           {/* Payment Info */}
           <Card className="p-6">
             <h2 className="text-sm font-medium text-muted-foreground mb-4 flex items-center gap-2">
@@ -211,7 +292,6 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
             </div>
           </Card>
         </div>
-
       </div>
     </div>
   )

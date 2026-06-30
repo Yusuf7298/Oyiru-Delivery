@@ -1,5 +1,8 @@
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
+import { db } from '@/lib/db'
+import { usersProfile } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 /**
  * Get the current user's ID from the session.
@@ -19,11 +22,18 @@ export async function getSession() {
 }
 
 /**
- * Check if user has a specific role.
+ * Check if the current user has a specific role.
+ * Queries the users_profile table for the actual role.
  */
 export async function hasRole(role: string): Promise<boolean> {
   const session = await getSession()
   if (!session?.user) return false
-  // Role will be fetched from users_profile table
-  return true
+
+  const profile = await db
+    .select({ role: usersProfile.role })
+    .from(usersProfile)
+    .where(eq(usersProfile.userId, session.user.id))
+    .limit(1)
+
+  return profile[0]?.role === role
 }

@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { oyruOrders } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 export async function GET() {
   try {
@@ -22,7 +22,11 @@ export async function GET() {
       (sum, order) => sum + Number(order.totalAmount),
       0
     )
-    const pendingOrders = userOrders.filter((o) => o.status === 'pending').length
+    
+    // In progress orders are submitted but not completed/cancelled
+    const pendingOrders = userOrders.filter(
+      (o) => o.status !== 'completed' && o.status !== 'cancelled' && o.status !== 'draft'
+    ).length
 
     return Response.json({
       totalOrders,

@@ -2,15 +2,9 @@
 
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { Eye, Download } from 'lucide-react'
+import { Eye, Download, Truck, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
-
-interface OrderItem {
-  id: string
-  productId: string
-  quantity: number
-  unitPrice: number | string
-}
+import { getHotelOrderDetails, submitB2BOrder } from '@/app/actions/b2b-orders'
 
 interface Order {
   id: string
@@ -20,13 +14,18 @@ interface Order {
   deliveryAddress: string
   status: string
   createdAt: string
+  items?: any[]
+  driver?: {
+    name: string
+    phone: string
+  }
 }
 
 export default function HotelOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([])
+  const [isDetailsLoading, setIsDetailsLoading] = useState(false)
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -34,7 +33,7 @@ export default function HotelOrdersPage() {
         const response = await fetch('/api/hotel/orders')
         if (response.ok) {
           const data = await response.json()
-          setOrders(data)
+          setOrders(data.orders || data) // depending on API response format
         }
       } catch (error) {
         console.error('Error fetching orders:', error)
@@ -47,15 +46,31 @@ export default function HotelOrdersPage() {
   }, [])
 
   const handleViewOrder = async (order: Order) => {
+    setIsDetailsLoading(true)
     setSelectedOrder(order)
     try {
-      const response = await fetch(`/api/hotel/orders/${order.id}/items`)
-      if (response.ok) {
-        const data = await response.json()
-        setOrderItems(data)
+      const data = await getHotelOrderDetails(order.id)
+      if (data.success && data.order) {
+        setSelectedOrder(data.order as any)
       }
     } catch (error) {
       console.error('Error fetching order items:', error)
+    } finally {
+      setIsDetailsLoading(false)
+    }
+  }
+
+  const handleSubmitOrder = async (order: Order) => {
+    try {
+      const res = await submitB2BOrder(order.id)
+      if (res.success) {
+        setOrders(orders.map(o => o.id === order.id ? { ...o, status: 'submitted' } : o))
+      } else {
+        alert(res.error || 'Failed to submit order')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error submitting order')
     }
   }
 
@@ -86,8 +101,13 @@ Delivery Address: ${order.deliveryAddress}
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800'
-      case 'confirmed':
+      case 'manager_reviewed':
         return 'bg-blue-100 text-blue-800'
+      case 'approved':
+        return 'bg-purple-100 text-purple-800'
+      case 'shipment_prepared':
+        return 'bg-orange-100 text-orange-800'
+      case 'shipped':
       case 'delivered':
         return 'bg-green-100 text-green-800'
       case 'cancelled':
@@ -95,6 +115,10 @@ Delivery Address: ${order.deliveryAddress}
       default:
         return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  const formatStatus = (status: string) => {
+    return status.replace('_', ' ').toUpperCase()
   }
 
   return (
@@ -155,7 +179,7 @@ Delivery Address: ${order.deliveryAddress}
                           order.status
                         )}`}
                       >
-                        {order.status}
+                        {formatStatus(order.status)}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -184,6 +208,15 @@ Delivery Address: ${order.deliveryAddress}
                     <Eye className="w-4 h-4" />
                     View Details
                   </button>
+                  {order.status === 'draft' && (
+                    <button
+                      onClick={() => handleSubmitOrder(order)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Submit Order
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDownloadInvoice(order)}
                     className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
@@ -201,61 +234,94 @@ Delivery Address: ${order.deliveryAddress}
       {/* Order Details Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-lg max-w-md w-full p-6">
+          <div className="bg-card rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Order Details</h2>
-            <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
-              <div>
-                <p className="text-sm text-muted-foreground">Order Number</p>
-                <p className="font-semibold">{selectedOrder.orderNumber}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Date</p>
-                <p className="font-semibold">
-                  {new Date(selectedOrder.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="font-semibold text-lg text-primary">
-                  {Number(selectedOrder.totalAmount).toFixed(2)} Birr
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                    selectedOrder.status
-                  )}`}
-                >
-                  {selectedOrder.status}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Items</p>
-                {orderItems.length > 0 ? (
-                  <div className="space-y-2">
-                    {orderItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex justify-between text-sm border-b border-border pb-2"
-                      >
-                        <div>
-                          <p className="font-medium">Qty: {item.quantity}</p>
-                        </div>
-                        <span>{Number(item.unitPrice).toFixed(2)} Birr each</span>
-                      </div>
-                    ))}
+            
+            {isDetailsLoading ? (
+               <div className="py-8 text-center text-muted-foreground animate-pulse">
+                 Loading details...
+               </div>
+            ) : (
+              <div className="space-y-6 mb-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Order Number</p>
+                    <p className="font-semibold">{selectedOrder.orderNumber}</p>
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No items</p>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Date</p>
+                    <p className="font-semibold">
+                      {new Date(selectedOrder.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Amount</p>
+                    <p className="font-semibold text-lg text-primary">
+                      {Number(selectedOrder.totalAmount).toFixed(2)} Birr
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Status</p>
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                        selectedOrder.status
+                      )}`}
+                    >
+                      {formatStatus(selectedOrder.status)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Driver Info if Shipped */}
+                {(selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered') && selectedOrder.driver && (
+                  <div className="bg-green-500/10 p-4 rounded-xl border border-green-500/20">
+                    <h3 className="font-semibold text-green-700 flex items-center gap-2 mb-2">
+                      <Truck className="w-4 h-4" /> Delivery Assigned
+                    </h3>
+                    <div className="text-sm text-green-900/80">
+                      <p><strong>Driver:</strong> {selectedOrder.driver.name}</p>
+                      <p><strong>Phone:</strong> {selectedOrder.driver.phone}</p>
+                    </div>
+                  </div>
                 )}
+
+                <div>
+                  <p className="text-sm text-muted-foreground mb-3">Order Items</p>
+                  {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedOrder.items.map((item: any) => (
+                        <div
+                          key={item.id}
+                          className="flex justify-between items-center text-sm border border-border p-3 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-secondary rounded overflow-hidden relative">
+                               {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" />}
+                            </div>
+                            <div>
+                              <p className="font-medium">{item.name}</p>
+                              <p className="text-muted-foreground">{item.quantity} kg</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                             <p className="font-semibold text-primary">{(Number(item.unitPrice) * item.quantity).toFixed(2)} Birr</p>
+                             <p className="text-xs text-muted-foreground">{Number(item.unitPrice).toFixed(2)} Birr/kg</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No items</p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+            
             <button
               onClick={() => setSelectedOrder(null)}
-              className="w-full px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
+              className="w-full px-4 py-3 border border-border rounded-lg hover:bg-muted font-medium transition-colors"
             >
-              Close
+              Close Details
             </button>
           </div>
         </div>

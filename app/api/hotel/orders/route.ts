@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { oyruOrders, oyruOrderItems } from '@/lib/db/schema'
+import { oyruOrders, oyruOrderItems, orderStatusHistory, hotelAccounts } from '@/lib/db/schema'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { v4 as uuidv4 } from 'uuid'
@@ -16,15 +16,34 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Admins and super admins manage products — they cannot place orders
+    if (authContext.role === 'admin' || authContext.role === 'super_admin') {
+      return Response.json({ error: 'Admins cannot create orders' }, { status: 403 })
+    }
+
     const body = await request.json()
-    const { items, totalAmount, deliveryAddress, deliveryNotes, paymentMethod = 'COD' } = body
+    let { items, totalAmount, deliveryAddress, deliveryNotes, paymentMethod = 'COD' } = body
 
     if (!items || items.length === 0) {
       return Response.json({ error: 'Cart is empty' }, { status: 400 })
     }
 
+    // Get hotel account to find default address and ID
+    const hotel = await db
+      .select({ id: hotelAccounts.id, address: hotelAccounts.address })
+      .from(hotelAccounts)
+      .where(eq(hotelAccounts.userId, authContext.userId))
+      .limit(1)
+
+    if (!hotel.length) {
+      return Response.json({ error: 'Hotel account not found' }, { status: 404 })
+    }
+
     if (!deliveryAddress) {
-      return Response.json({ error: 'Delivery address is required' }, { status: 400 })
+      deliveryAddress = hotel[0].address
+      if (!deliveryAddress) {
+         return Response.json({ error: 'Delivery address is required' }, { status: 400 })
+      }
     }
 
     // Check stock availability for all items
@@ -48,11 +67,12 @@ export async function POST(request: Request) {
         id: orderId,
         orderNumber,
         userId: authContext.userId,
+        hotelAccountId: hotel[0].id,
         totalAmount: totalAmount.toString(),
         paymentMethod,
         deliveryAddress,
         deliveryNotes,
-        status: 'pending',
+        status: 'draft',
       })
       .returning()
 
@@ -66,6 +86,17 @@ export async function POST(request: Request) {
     }))
 
     await db.insert(oyruOrderItems).values(orderItemsData)
+
+    // Log the order status change in history
+    await db.insert(orderStatusHistory).values({
+      id: uuidv4(),
+      orderId,
+      fromStatus: null,
+      toStatus: 'draft',
+      changedBy: authContext.userId,
+      reason: 'Order created via API',
+      createdAt: new Date(),
+    })
 
     // Decrement stock for each item
     for (const item of items) {

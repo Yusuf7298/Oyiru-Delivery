@@ -125,29 +125,40 @@ export default function AdminOrdersPage() {
                     </td>
                   </tr>
                 ) : (
-                  orders.map((order: any) => (
-                    <tr key={order.id} className="hover:bg-secondary/20 transition-colors">
-                      <td className="px-6 py-4 font-mono text-sm">{order.orderNumber}</td>
-                      <td className="px-6 py-4 text-sm">{order.userId ? 'Registered User' : 'Guest'}</td>
-                      <td className="px-6 py-4 text-sm">Oyru Store</td>
-                      <td className="px-6 py-4 text-sm font-semibold">{parseFloat(order.totalAmount).toFixed(2)} Birr</td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                          {order.status || 'pending'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Link href={`/admin/orders/${order.id}`}>
-                          <Button variant="ghost" size="sm">
-                            View
-                          </Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
+                  orders
+                    .filter(order => {
+                      const matchesSearch = !searchQuery ||
+                        (order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                        (order.userId?.toLowerCase().includes(searchQuery.toLowerCase()))
+                      const matchesStatus = statusFilter === 'all' || order.status === statusFilter
+                      return matchesSearch && matchesStatus
+                    })
+                    .map((order: any) => (
+                      <tr key={order.id} className="hover:bg-secondary/20 transition-colors">
+                        <td className="px-6 py-4 font-mono text-sm">{order.orderNumber}</td>
+                        <td className="px-6 py-4 text-sm">{order.userId ? 'Registered User' : 'Guest'}</td>
+                        <td className="px-6 py-4 text-sm">Oyru Store</td>
+                        <td className="px-6 py-4 text-sm font-semibold">{parseFloat(order.totalAmount).toFixed(2)} Birr</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                              order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                order.status === 'in_transit' ? 'bg-indigo-100 text-indigo-800' :
+                                  order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-yellow-100 text-yellow-800'
+                            }`}>
+                            {order.status || 'pending'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Link href={`/admin/orders/${order.id}`}>
+                            <Button variant="ghost" size="sm">View</Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
                 )}
               </tbody>
             </table>

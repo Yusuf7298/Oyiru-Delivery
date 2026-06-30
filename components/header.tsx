@@ -16,7 +16,7 @@ export function Header() {
   const router = useRouter()
   const pathname = usePathname()
 
-  if (pathname.startsWith('/admin') || pathname.startsWith('/driver') || pathname.startsWith('/hotel')) {
+  if (pathname.startsWith('/admin') || pathname.startsWith('/super-admin') || pathname.startsWith('/driver') || pathname.startsWith('/hotel')) {
     return null
   }
 

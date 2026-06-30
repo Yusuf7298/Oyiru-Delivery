@@ -130,7 +130,7 @@ export async function getOrderByIdAdmin(orderId: string) {
 /**
  * Update Oyru Order Status (Admin)
  */
-export async function updateOyruOrderStatus(orderId: string, status: string) {
+export async function updateOyruOrderStatus(orderId: string, status: any) {
   try {
     const updated = await db
       .update(oyruOrders)
@@ -148,9 +148,8 @@ export async function updateOyruOrderStatus(orderId: string, status: string) {
 /**
  * Create Staff Account (Super Admin Only)
  */
-export async function createStaffAccount(data: any) {
+export async function createStaffAccount(formData: FormData) {
   const { auth } = await import('@/lib/auth')
-  const { headers } = await import('next/headers')
   const { user, usersProfile } = await import('@/lib/db/schema')
   const { getSession } = await import('@/lib/auth-utils')
 
@@ -166,24 +165,142 @@ export async function createStaffAccount(data: any) {
   }
 
   try {
-    // We cannot easily call auth.api.signUpEmail from here because it expects full context.
-    // However, since we are admin, we can insert the user directly and hash password,
-    // OR just use fetch to the API. 
-    // Wait, Better Auth server-side API:
+    const role = formData.get('role') as string
+    const name = formData.get('name') as string
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+    const phone = formData.get('phone') as string
+    
+    // Process File Upload if present
+    const pdfFile = formData.get('agreementPdf') as File | null
+    let pdfUrl = ''
+    if (pdfFile && pdfFile.size > 0) {
+       // In a real production app, upload to S3/Cloud. For prototype, we generate a mock URL or save locally.
+       // We'll mock the URL here, or if you implemented a local write, we can write it.
+       // Since server actions cannot easily use `fs` without path resolution tricks in Next.js, we'll store a pseudo URL.
+       pdfUrl = `/uploads/agreements/${Date.now()}-${pdfFile.name.replace(/\s/g, '_')}`
+       // NOTE: Actual file saving logic would go here.
+    }
+
     const res = await auth.api.signUpEmail({
       body: {
-        email: data.email,
-        password: data.password,
-        name: data.name
+        email,
+        password,
+        name
       },
-      headers: await headers()
+      headers: new Headers() // Do not pass current session headers to avoid cookie overriding
     })
 
     if (res?.user) {
-      // Update their profile to the chosen role
-      await db.update(usersProfile)
-        .set({ role: data.role as any })
-        .where(eq(usersProfile.userId, res.user.id))
+      // 1. Create or Update usersProfile
+      const existingProfile = await db.query.usersProfile.findFirst({
+        where: eq(usersProfile.userId, res.user.id)
+      })
+
+      if (existingProfile) {
+        await db.update(usersProfile)
+          .set({ role: role as any, phoneNumber: phone, address: formData.get('hotelAddress') as string || undefined })
+          .where(eq(usersProfile.userId, res.user.id))
+      } else {
+        const profileId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        await db.insert(usersProfile).values({
+          id: profileId,
+          userId: res.user.id,
+          role: role as any,
+          phoneNumber: phone,
+          address: formData.get('hotelAddress') as string || undefined
+        })
+      }
+
+      // 2. Role-specific creations
+      if (role === 'restaurant_owner') {
+        const { hotelAccounts, hotelProductAgreements } = await import('@/lib/db/schema')
+        
+        const companyName = formData.get('companyName') as string || name
+        const address = formData.get('hotelAddress') as string
+        const duration = formData.get('agreementDuration') as string
+        const basePayment = formData.get('basePaymentAmount') as string
+        const productId = formData.get('productId') as string
+        const pricePerKg = formData.get('pricePerKg') as string
+
+        const hotelId = `hot_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        
+        await db.insert(hotelAccounts).values({
+          id: hotelId,
+          userId: res.user.id,
+          companyName,
+          contactPerson: name,
+          email,
+          phone,
+          agreementDuration: duration || null,
+          basePaymentAmount: basePayment ? basePayment : null,
+          isActive: true
+        })
+
+        // Parse agreements JSON (array of {productId, pricePerKg})
+        const agreementsJson = formData.get('agreements') as string
+        let agreementsArray: Array<{ productId?: string; pricePerKg?: string }> = []
+        try {
+          agreementsArray = agreementsJson ? JSON.parse(agreementsJson) : []
+        } catch (e) {
+          console.error('Failed to parse agreements JSON', e)
+        }
+        // Insert each agreement if both fields present
+        if (productId && pricePerKg) {
+          // retain original single insert for backward compatibility
+          await db.insert(hotelProductAgreements).values({
+            id: `hpa_${Date.now()}`,
+            hotelId,
+            productId,
+            agreedPrice: pricePerKg
+          })
+        }
+        // Insert additional agreements
+        for (const agr of agreementsArray) {
+          if (agr.productId && agr.pricePerKg) {
+            await db.insert(hotelProductAgreements).values({
+              id: `hpa_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+              hotelId,
+              productId: agr.productId,
+              agreedPrice: agr.pricePerKg
+            })
+          }
+        }
+      } 
+      else if (role === 'admin') {
+         const { adminProfiles } = await import('@/lib/db/schema')
+         const startDateStr = formData.get('startDate') as string
+         const positionTitle = formData.get('positionTitle') as string
+         
+         await db.insert(adminProfiles).values({
+            id: `adm_${Date.now()}`,
+            userId: res.user.id,
+            startDate: startDateStr ? new Date(startDateStr) : new Date(),
+            positionTitle,
+         })
+      }
+      else if (role === 'delivery_partner') {
+         const { deliveryPartners } = await import('@/lib/db/schema')
+         
+         const serviceType = formData.get('serviceType') as string
+         const serviceFee = formData.get('serviceFee') as string
+         const birthPlace = formData.get('birthPlace') as string
+         const guarantorName = formData.get('guarantorName') as string
+         const guarantorPhone = formData.get('guarantorPhone') as string
+
+         await db.insert(deliveryPartners).values({
+            id: `del_${Date.now()}`,
+            userId: res.user.id,
+            phoneNumber: phone || '',
+            serviceType,
+            serviceFee: serviceFee ? serviceFee : null,
+            birthPlace,
+            guarantorName,
+            guarantorPhone,
+            agreementPdfUrl: pdfUrl || null,
+            isVerified: true
+         })
+      }
 
       return { success: true }
     } else {

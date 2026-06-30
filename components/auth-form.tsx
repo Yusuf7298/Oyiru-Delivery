@@ -50,14 +50,16 @@ export function AuthForm({ mode, allowedRoles }: { mode: 'sign-in' | 'sign-up', 
 
       let redirectUrl = '/'
       const role = profile?.role
-      if (role === 'admin' || role === 'super_admin') {
+      if (role === 'super_admin') {
+        redirectUrl = '/super-admin'
+      } else if (role === 'admin') {
         redirectUrl = '/admin'
-      } else if (role === 'delivery_partner') {
+      } else if (role === 'delivery_partner' || role === 'delivery') {
         redirectUrl = '/driver'
-      } else if (role === 'restaurant_owner') {
+      } else if (role === 'restaurant_owner' || role === 'hotel') {
         redirectUrl = '/hotel'
       }
-      // customer or no role → '/'
+      // customer or no role → '/' (customer home)
 
       // Hard redirect so server layouts re-evaluate session
       window.location.href = redirectUrl

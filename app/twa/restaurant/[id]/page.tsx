@@ -171,8 +171,8 @@ export default function TelegramRestaurantPage() {
                 key={category.id}
                 onClick={() => handleCategoryChange(category.id)}
                 className={`px-3 py-1 rounded-full whitespace-nowrap text-sm transition-colors ${selectedCategory === category.id
-                    ? 'bg-primary text-white'
-                    : 'bg-secondary text-foreground'
+                  ? 'bg-primary text-white'
+                  : 'bg-secondary text-foreground'
                   }`}
               >
                 {category.name}
@@ -191,7 +191,7 @@ export default function TelegramRestaurantPage() {
               <div className="flex-1">
                 <h3 className="font-semibold text-sm">{dish.name}</h3>
                 <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{dish.description}</p>
-                <span className="text-sm font-bold text-primary">${dish.price}</span>
+                <span className="text-sm font-bold text-primary">{dish.price} Birr</span>
               </div>
               <div className="flex items-center gap-2">
                 {cart.has(dish.id) && (
@@ -223,7 +223,7 @@ export default function TelegramRestaurantPage() {
           <div className="flex justify-between items-center text-sm">
             <span className="text-muted-foreground">Total:</span>
             <span className="text-lg font-bold text-primary">
-              ${(getTotalPrice() + parseFloat(restaurant.deliveryFee || 0)).toFixed(2)}
+              {(getTotalPrice() + parseFloat(restaurant.deliveryFee || 0)).toFixed(2)} Birr
             </span>
           </div>
           <Button

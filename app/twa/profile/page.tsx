@@ -121,7 +121,7 @@ export default function TelegramProfilePage() {
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{new Date(order.createdAt).toLocaleDateString()}</span>
-                        <span className="font-semibold text-foreground">${parseFloat(order.totalAmount).toFixed(2)}</span>
+                        <span className="font-semibold text-foreground">{parseFloat(order.totalAmount).toFixed(2)} Birr</span>
                       </div>
                     </Link>
                   ))}
