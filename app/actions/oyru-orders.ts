@@ -9,6 +9,12 @@ import { isValidOyruTransition, canRolePerformTransition } from '@/lib/services/
 import { calculateOrderTotal } from '@/lib/services/pricing-service'
 import { sendOrderStatusNotification, notifyNewOrder } from '@/lib/services/notification-service'
 
+// Hotel accounts are created with either the `hotel` or `restaurant_owner` role.
+// Both represent the same business entity and must be able to place/view orders.
+function isHotelRole(role: string): boolean {
+  return role === 'hotel' || role === 'restaurant_owner'
+}
+
 export async function placeOrder(data: {
   items: { productId: string; quantity: number }[]
   deliveryAddress: string
@@ -16,7 +22,7 @@ export async function placeOrder(data: {
   paymentMethod?: 'COD' | 'INVOICE'
 }) {
   const auth = await getAuthContext()
-  if (!requireAuth(auth) || auth.role !== 'hotel') {
+  if (!requireAuth(auth) || !isHotelRole(auth.role)) {
     return { error: 'Only hotel users can place orders' }
   }
 
@@ -47,22 +53,7 @@ export async function placeOrder(data: {
     const orderId = uuidv4()
     const orderNumber = `OYR-${Date.now().toString(36).toUpperCase()}`
 
-    // Create order
-    await db.insert(oyruOrders).values({
-      id: orderId,
-      userId: auth.userId,
-      hotelAccountId: hotelAccount.id,
-      orderNumber,
-      totalAmount: grandTotal.toFixed(2),
-      paymentMethod: data.paymentMethod || 'INVOICE',
-      deliveryAddress: data.deliveryAddress,
-      deliveryNotes: data.deliveryNotes || null,
-      status: 'draft',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-
-    // Create order items
+    // Create order items payload
     const orderItemsData = calculatedItems.map((item) => ({
       id: uuidv4(),
       orderId,
@@ -73,17 +64,34 @@ export async function placeOrder(data: {
       updatedAt: new Date(),
     }))
 
-    await db.insert(oyruOrderItems).values(orderItemsData)
+    // Persist order, items and history atomically so a partial failure
+    // never leaves an orphan order with no line items.
+    await db.transaction(async (tx) => {
+      await tx.insert(oyruOrders).values({
+        id: orderId,
+        userId: auth.userId,
+        hotelAccountId: hotelAccount.id,
+        orderNumber,
+        totalAmount: grandTotal.toFixed(2),
+        paymentMethod: data.paymentMethod || 'INVOICE',
+        deliveryAddress: data.deliveryAddress,
+        deliveryNotes: data.deliveryNotes || null,
+        status: 'draft',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
 
-    // Record status history
-    await db.insert(orderStatusHistory).values({
-      id: uuidv4(),
-      orderId,
-      fromStatus: null,
-      toStatus: 'draft',
-      changedBy: auth.userId,
-      reason: 'Order created',
-      createdAt: new Date(),
+      await tx.insert(oyruOrderItems).values(orderItemsData)
+
+      await tx.insert(orderStatusHistory).values({
+        id: uuidv4(),
+        orderId,
+        fromStatus: null,
+        toStatus: 'draft',
+        changedBy: auth.userId,
+        reason: 'Order created',
+        createdAt: new Date(),
+      })
     })
 
     return { success: true, orderId, orderNumber, totalAmount: grandTotal }
@@ -95,7 +103,7 @@ export async function placeOrder(data: {
 
 export async function submitOrder(orderId: string) {
   const auth = await getAuthContext()
-  if (!requireAuth(auth) || auth.role !== 'hotel') {
+  if (!requireAuth(auth) || !isHotelRole(auth.role)) {
     return { error: 'Only hotel users can submit orders' }
   }
 
@@ -205,7 +213,7 @@ export async function getHotelOrders() {
   try {
     let ordersQuery;
 
-    if (auth.role === 'hotel') {
+    if (isHotelRole(auth.role)) {
       ordersQuery = await db
         .select()
         .from(oyruOrders)
@@ -241,7 +249,7 @@ export async function getOrderDetails(orderId: string) {
     if (!order.length) return { error: 'Order not found' }
 
     // RBAC check
-    if (auth.role === 'hotel' && order[0].userId !== auth.userId) {
+    if (isHotelRole(auth.role) && order[0].userId !== auth.userId) {
       return { error: 'Unauthorized' }
     }
 

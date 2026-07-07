@@ -206,7 +206,7 @@ export default function OrdersPage() {
       {/* Order Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-card rounded-lg max-w-md w-full p-6 my-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
+          <div className="bg-card rounded-lg max-w-md w-full p-4 sm:p-6 my-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Order #{selectedOrder.orderNumber || selectedOrder.id.slice(0, 8)}</h2>
               <button

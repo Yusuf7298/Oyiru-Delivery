@@ -1,14 +1,35 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { oyruOrders, hotelAccounts, products, categories_oyru } from '@/lib/db/schema'
+import { oyruOrders, hotelAccounts, products, categories_oyru, usersProfile } from '@/lib/db/schema'
 import { eq, count } from 'drizzle-orm'
+import { getSession } from '@/lib/auth-utils'
+
+/**
+ * Ensure the caller is an authenticated admin or super_admin.
+ * Server actions are publicly-invokable endpoints, so every privileged
+ * action must guard itself — there is no route middleware doing it.
+ */
+async function requireAdmin() {
+  const session = await getSession()
+  if (!session?.user) throw new Error('Unauthorized')
+
+  const profile = await db.query.usersProfile.findFirst({
+    where: eq(usersProfile.userId, session.user.id),
+  })
+
+  if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+    throw new Error('Forbidden')
+  }
+  return session
+}
 
 /**
  * Get platform statistics (admin only)
  */
 export async function getPlatformStats() {
   try {
+    await requireAdmin()
     // Get all orders
     const allOrders = await db.select().from(oyruOrders)
     const ordersCount = allOrders.length
@@ -49,6 +70,7 @@ export async function getPlatformStats() {
  */
 export async function getAllHotels() {
   try {
+    await requireAdmin()
     return await db.select().from(hotelAccounts)
   } catch (error) {
     console.error('[v0] Error getting hotels:', error)
@@ -61,6 +83,7 @@ export async function getAllHotels() {
  */
 export async function getAllOrders() {
   try {
+    await requireAdmin()
     return await db.select().from(oyruOrders)
   } catch (error) {
     console.error('[v0] Error getting orders:', error)
@@ -73,6 +96,7 @@ export async function getAllOrders() {
  */
 export async function getAllProducts() {
   try {
+    await requireAdmin()
     return await db.select().from(products)
   } catch (error) {
     console.error('[v0] Error getting products:', error)
@@ -85,6 +109,7 @@ export async function getAllProducts() {
  */
 export async function getCategories() {
   try {
+    await requireAdmin()
     return await db.select().from(categories_oyru)
   } catch (error) {
     console.error('[v0] Error getting categories:', error)
@@ -97,6 +122,7 @@ export async function getCategories() {
  */
 export async function getOrderByIdAdmin(orderId: string) {
   try {
+    await requireAdmin()
     const order = await db.query.oyruOrders.findFirst({
       where: eq(oyruOrders.id, orderId)
     })
@@ -132,6 +158,7 @@ export async function getOrderByIdAdmin(orderId: string) {
  */
 export async function updateOyruOrderStatus(orderId: string, status: any) {
   try {
+    await requireAdmin()
     const updated = await db
       .update(oyruOrders)
       .set({ status, updatedAt: new Date() })
@@ -220,8 +247,6 @@ export async function createStaffAccount(formData: FormData) {
         const address = formData.get('hotelAddress') as string
         const duration = formData.get('agreementDuration') as string
         const basePayment = formData.get('basePaymentAmount') as string
-        const productId = formData.get('productId') as string
-        const pricePerKg = formData.get('pricePerKg') as string
 
         const hotelId = `hot_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         
@@ -245,17 +270,7 @@ export async function createStaffAccount(formData: FormData) {
         } catch (e) {
           console.error('Failed to parse agreements JSON', e)
         }
-        // Insert each agreement if both fields present
-        if (productId && pricePerKg) {
-          // retain original single insert for backward compatibility
-          await db.insert(hotelProductAgreements).values({
-            id: `hpa_${Date.now()}`,
-            hotelId,
-            productId,
-            agreedPrice: pricePerKg
-          })
-        }
-        // Insert additional agreements
+        // Insert each product agreement from the form's agreements list
         for (const agr of agreementsArray) {
           if (agr.productId && agr.pricePerKg) {
             await db.insert(hotelProductAgreements).values({

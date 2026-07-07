@@ -2,8 +2,9 @@
 
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { ShoppingCart, Filter, X } from 'lucide-react'
+import { ShoppingCart, Filter, X, Plus, Minus } from 'lucide-react'
 import Link from 'next/link'
+import { submitB2BOrder } from '@/app/actions/b2b-orders'
 
 interface Product {
   id: string
@@ -130,19 +131,33 @@ export default function HotelOrderingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: cart,
+          items: cart.map(item => ({ productId: item.productId, quantity: item.quantity })),
           totalAmount: totalPrice,
         }),
       })
 
       if (response.ok) {
-        const order = await response.json()
-        setSuccess(`Order placed! Order ID: ${order.order?.orderNumber || order.orderNumber}`)
+        const data = await response.json()
+        const orderId = data.order?.id
+
+        // Auto-submit the order so it enters the workflow immediately
+        if (orderId) {
+          const submitRes = await submitB2BOrder(orderId)
+          if (submitRes.success) {
+            setSuccess(`Order #${data.order?.orderNumber} submitted successfully! Admin will review shortly.`)
+          } else {
+            // Order created but submit failed — still show success
+            setSuccess(`Order #${data.order?.orderNumber} created. Please go to My Orders to submit it.`)
+          }
+        } else {
+          setSuccess(`Order placed successfully!`)
+        }
+
         setCart([])
         setShowCart(false)
       } else {
-        const data = await response.json()
-        setError(data.error || 'Failed to place order')
+        const errData = await response.json()
+        setError(errData.error || 'Failed to place order')
       }
     } catch (error) {
       console.error('Error placing order:', error)
@@ -275,14 +290,16 @@ export default function HotelOrderingPage() {
                       <button
                         onClick={() => handleAddToCart(product)}
                         disabled={product.stockQuantity === 0}
-                        className={`w-full py-2 rounded-lg font-medium transition-colors ${product.stockQuantity === 0
+                        className={`w-full py-3 rounded-lg font-medium transition-colors ${product.stockQuantity === 0
                           ? 'bg-muted text-muted-foreground cursor-not-allowed'
                           : 'bg-primary text-primary-foreground hover:bg-primary/90'
                           }`}
                       >
                         {product.stockQuantity === 0
                           ? 'Out of Stock'
-                          : 'Add to Cart (+1kg)'}
+                          : cart.find(i => i.productId === product.id)
+                            ? `In Cart (${cart.find(i => i.productId === product.id)?.quantity} kg) — Add More`
+                            : 'Add to Cart (+1kg)'}
                       </button>
                     </div>
                   </div>
@@ -329,46 +346,47 @@ export default function HotelOrderingPage() {
                   {/* Cart Items */}
                   <div className="space-y-3 mb-4 pb-4 border-b border-border">
                     {cart.map((item) => (
-                      <div key={item.productId} className="flex items-center justify-between text-sm">
-                        <div className="flex-1">
-                          <p className="font-medium">{item.productName}</p>
+                      <div key={item.productId} className="flex items-start gap-3 text-sm">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{item.productName}</p>
                           <p className="text-xs text-muted-foreground">
-                            {Number(item.price).toFixed(2)} Birr
+                            {Number(item.price).toFixed(2)} Birr/kg
+                          </p>
+                          <p className="text-xs font-semibold text-primary mt-0.5">
+                            Subtotal: {(Number(item.price) * item.quantity).toFixed(2)} Birr
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           <button
-                            onClick={() =>
-                              handleUpdateQuantity(
-                                item.productId,
-                                item.quantity - 1
-                              )
-                            }
-                            className="px-2 py-1 border border-border rounded hover:bg-muted"
+                            onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
+                            className="w-7 h-7 flex items-center justify-center border border-border rounded hover:bg-muted text-lg leading-none"
                           >
-                            -
+                            <Minus className="w-3 h-3" />
                           </button>
-                          <span className="w-10 text-center font-semibold text-xs">
-                            {item.quantity} kg
-                          </span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const v = parseInt(e.target.value)
+                              if (!isNaN(v) && v > 0) handleUpdateQuantity(item.productId, v)
+                            }}
+                            className="w-16 text-center text-sm font-semibold border border-border rounded px-1 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                          />
                           <button
-                            onClick={() =>
-                              handleUpdateQuantity(
-                                item.productId,
-                                item.quantity + 1
-                              )
-                            }
-                            className="px-2 py-1 border border-border rounded hover:bg-muted"
+                            onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
+                            className="w-7 h-7 flex items-center justify-center border border-border rounded hover:bg-muted"
                           >
-                            +
+                            <Plus className="w-3 h-3" />
+                          </button>
+                          <span className="text-xs text-muted-foreground ml-1">kg</span>
+                          <button
+                            onClick={() => handleRemoveFromCart(item.productId)}
+                            className="ml-1 p-1 text-destructive hover:bg-destructive/10 rounded"
+                          >
+                            <X className="w-3 h-3" />
                           </button>
                         </div>
-                        <button
-                          onClick={() => handleRemoveFromCart(item.productId)}
-                          className="p-1 text-destructive hover:bg-destructive/10 rounded ml-2"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
                       </div>
                     ))}
                   </div>

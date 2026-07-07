@@ -18,8 +18,6 @@ import {
   ShoppingCart,
   Truck,
   TrendingUp,
-  AlertCircle,
-  Settings,
   LogOut,
 } from 'lucide-react'
 
@@ -83,9 +81,6 @@ export default function AdminDashboard() {
             <span className="font-bold text-xl hidden sm:inline">Oyru Admin</span>
           </div>
           <nav className="flex items-center gap-4">
-            <Link href="/admin/settings" className="p-2 hover:bg-secondary rounded-lg transition-colors">
-              <Settings className="w-5 h-5" />
-            </Link>
             <Link href="/sign-in" className="p-2 hover:bg-secondary rounded-lg transition-colors">
               <LogOut className="w-5 h-5" />
             </Link>
@@ -99,12 +94,7 @@ export default function AdminDashboard() {
           <nav className="space-y-2">
             <NavItem icon={BarChart3} label="Overview" href="/admin/dashboard" active={activeTab === 'overview'} />
             <NavItem icon={ShoppingCart} label="Orders" href="/admin/orders" active={activeTab === 'orders'} />
-            <NavItem icon={Users} label="Customers" href="/admin/customers" active={activeTab === 'customers'} />
-            <NavItem icon={ShoppingCart} label="Restaurants" href="/admin/restaurants" active={activeTab === 'restaurants'} />
-            <NavItem icon={Truck} label="Delivery Partners" href="/admin/delivery-partners" active={activeTab === 'delivery'} />
             <NavItem icon={TrendingUp} label="Analytics" href="/admin/analytics" active={activeTab === 'analytics'} />
-            <NavItem icon={AlertCircle} label="Support Tickets" href="/admin/support" active={activeTab === 'support'} />
-            <NavItem icon={Settings} label="Settings" href="/admin/settings" active={activeTab === 'settings'} />
           </nav>
         </aside>
 

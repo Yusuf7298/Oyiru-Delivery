@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -15,7 +14,6 @@ export default function StaffAccountsPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [products, setProducts] = useState<Array<{id: string; name: string}>>([]);
 
-  // Update a specific agreement field
   const updateAgreement = (index: number, key: 'productId' | 'pricePerKg', value: string) => {
     setAgreements(prev => {
       const updated = [...prev];
@@ -32,7 +30,6 @@ export default function StaffAccountsPage() {
   const removeAgreement = (index: number) => {
     setAgreements(prev => prev.filter((_, i) => i !== index))
   }
-
 
   useEffect(() => {
     getAllProducts().then(setProducts)
@@ -115,7 +112,7 @@ export default function StaffAccountsPage() {
                     value={role}
                     onChange={e => setRole(e.target.value)}
                     className="w-full flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
+                  >0916787822
                     <option value="admin">Admin (Store Manager)</option>
                     <option value="restaurant_owner">Hotel / Restaurant Owner</option>
                     <option value="delivery_partner">Delivery Partner (Driver)</option>
@@ -276,6 +273,7 @@ export default function StaffAccountsPage() {
             </Button>
         </form>
           </Card>
+        </div>
         {/* === SIDEBAR === */}
         <div className="space-y-6">
           <Card className="p-6 bg-secondary/30 border-none shadow-inner">

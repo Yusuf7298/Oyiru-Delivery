@@ -14,7 +14,7 @@ export default function StaffAccountsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [products, setProducts] = useState<Array<{id: string; name: string}>>([]);
+  const [products, setProducts] = useState<Array<{ id: string; name: string }>>([]);
 
   // Update a specific agreement field
   const updateAgreement = (index: number, key: 'productId' | 'pricePerKg', value: string) => {
@@ -24,7 +24,7 @@ export default function StaffAccountsPage() {
       return updated;
     });
   };
-  const [agreements, setAgreements] = useState<Array<{productId?: string; pricePerKg?: string}>>([])
+  const [agreements, setAgreements] = useState<Array<{ productId?: string; pricePerKg?: string }>>([])
 
   const addAgreement = () => {
     setAgreements(prev => [...prev, {}])
@@ -275,10 +275,10 @@ export default function StaffAccountsPage() {
               {error && <p className="text-sm text-red-500 font-medium bg-red-500/10 p-3 rounded-lg">{error}</p>}
               {success && <p className="text-sm text-green-600 font-medium bg-green-500/10 p-3 rounded-lg">{success}</p>}
 
-            <input type="hidden" name="agreements" value={JSON.stringify(agreements)} />
-            <Button type="submit" disabled={loading} className="w-full mt-4 h-12 text-lg">
-              {loading ? 'Creating...' : 'Create Account & Save Agreement'}
-            </Button>
+              <input type="hidden" name="agreements" value={JSON.stringify(agreements)} />
+              <Button type="submit" disabled={loading} className="w-full mt-4 h-12 text-lg">
+                {loading ? 'Creating...' : 'Create Account & Save Agreement'}
+              </Button>
             </form>
           </Card>
         </div>
@@ -293,6 +293,10 @@ export default function StaffAccountsPage() {
               Provide these links along with the credentials to the newly created staff members so they can log in.
             </p>
             <div className="space-y-3">
+              <div className="bg-background p-3 rounded-lg border border-border">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Super Admin</p>
+                <code className="text-sm text-primary">/auth-superadmin-s9k3</code>
+              </div>
               <div className="bg-background p-3 rounded-lg border border-border">
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Admins</p>
                 <code className="text-sm text-primary">/auth-admin-x7f9</code>

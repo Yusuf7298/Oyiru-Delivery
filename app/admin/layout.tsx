@@ -21,7 +21,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     .where(eq(usersProfile.userId, session.user.id))
     .limit(1)
 
-  if (profile[0]?.role !== 'admin') {
+  if (profile[0]?.role !== 'admin' && profile[0]?.role !== 'super_admin') {
     redirect('/')
   }
 

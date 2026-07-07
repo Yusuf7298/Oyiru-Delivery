@@ -46,7 +46,7 @@ export default function OyruOrdersPage() {
     setOrderItems([])
     setOrderHistory([])
     setSelectedDriverId('')
-    
+
     const res = await getOrderDetails(order.id)
     if (res.success) {
       setOrderDetails(res.order)
@@ -137,9 +137,8 @@ export default function OyruOrdersPage() {
         </div>
 
         {message && (
-          <div className={`p-4 rounded-xl mb-6 flex items-center justify-between ${
-            message.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
-          }`}>
+          <div className={`p-4 rounded-xl mb-6 flex items-center justify-between ${message.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+            }`}>
             <span className="font-medium">{message.text}</span>
             <button onClick={() => setMessage(null)} className="opacity-60 hover:opacity-100">✕</button>
           </div>
@@ -222,6 +221,12 @@ export default function OyruOrdersPage() {
                   >
                     <Eye className="w-4 h-4" /> View Details
                   </button>
+                  <a
+                    href={`/super-admin/orders/${order.id}`}
+                    className="flex items-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                  >
+                    Manage →
+                  </a>
                 </div>
               </div>
             ))}

@@ -111,7 +111,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       {/* Product Details Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          
+
           {/* Product Image Panel */}
           <div className="relative group w-full bg-card border border-border/50 rounded-3xl overflow-hidden shadow-2xl shadow-primary/5 aspect-square flex items-center justify-center animate-in slide-in-from-left-8 fade-in duration-700">
             {product.image ? (
@@ -126,7 +126,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <span className="font-medium">No image available</span>
               </div>
             )}
-            
+
             {/* Overlay Gradient for premium feel */}
             <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent pointer-events-none" />
           </div>
@@ -145,7 +145,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </div>
                 )}
               </div>
-              <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-4 leading-tight">{product.name}</h1>
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-foreground mb-4 leading-tight">{product.name}</h1>
               {product.description && (
                 <p className="text-muted-foreground text-lg leading-relaxed">{product.description}</p>
               )}
@@ -154,7 +154,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {/* Price & Action Card */}
             <div className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-3xl p-6 sm:p-8 shadow-xl shadow-primary/5 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-              
+
               <div className="flex items-end gap-2 mb-8 relative z-10">
                 <span className="text-5xl font-extrabold text-primary">
                   {Number(product.price).toFixed(2)} Birr
@@ -195,11 +195,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <button
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
-                  className={`flex-1 flex items-center justify-center gap-2 w-full px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg ${
-                    addedToCart
+                  className={`flex-1 flex items-center justify-center gap-2 w-full px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg ${addedToCart
                       ? 'bg-green-500 text-white shadow-green-500/20'
                       : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   <ShoppingCart className="w-6 h-6" />
                   {addedToCart ? 'Added Successfully!' : 'Add to Cart'}

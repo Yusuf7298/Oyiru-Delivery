@@ -78,7 +78,7 @@ export default function TelegramHome() {
                 </div>
                 <div className="text-right ml-2">
                   <div className="text-sm font-semibold text-primary">{restaurant.deliveryTime || 30}m</div>
-                  <div className="text-xs text-muted-foreground">${restaurant.deliveryFee || 0}</div>
+                  <div className="text-xs text-muted-foreground">{restaurant.deliveryFee || 0} Birr</div>
                 </div>
               </div>
             </Link>
@@ -101,15 +101,17 @@ export default function TelegramHome() {
         </Link>
         <Link
           href="/twa/cart"
-          className="flex flex-col items-center justify-center gap-1 flex-1 h-full hover:bg-secondary/50 active:bg-secondary relative"
+          className="flex flex-col items-center justify-center gap-1 flex-1 h-full hover:bg-secondary/50 active:bg-secondary"
         >
-          <ShoppingCart className="w-5 h-5" />
+          <span className="relative">
+            <ShoppingCart className="w-5 h-5" />
+            {getItemCount() > 0 && (
+              <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none">
+                {getItemCount()}
+              </span>
+            )}
+          </span>
           <span className="text-xs font-medium">Cart</span>
-          {getItemCount() > 0 && (
-            <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              {getItemCount()}
-            </span>
-          )}
         </Link>
         <Link
           href="/twa/profile"

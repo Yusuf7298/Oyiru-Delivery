@@ -233,14 +233,14 @@ Delivery Address: ${order.deliveryAddress}
 
       {/* Order Details Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-card rounded-lg max-w-lg w-full p-4 sm:p-6 my-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Order Details</h2>
-            
+
             {isDetailsLoading ? (
-               <div className="py-8 text-center text-muted-foreground animate-pulse">
-                 Loading details...
-               </div>
+              <div className="py-8 text-center text-muted-foreground animate-pulse">
+                Loading details...
+              </div>
             ) : (
               <div className="space-y-6 mb-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -296,7 +296,7 @@ Delivery Address: ${order.deliveryAddress}
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-secondary rounded overflow-hidden relative">
-                               {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" />}
+                              {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" />}
                             </div>
                             <div>
                               <p className="font-medium">{item.name}</p>
@@ -304,8 +304,8 @@ Delivery Address: ${order.deliveryAddress}
                             </div>
                           </div>
                           <div className="text-right">
-                             <p className="font-semibold text-primary">{(Number(item.unitPrice) * item.quantity).toFixed(2)} Birr</p>
-                             <p className="text-xs text-muted-foreground">{Number(item.unitPrice).toFixed(2)} Birr/kg</p>
+                            <p className="font-semibold text-primary">{(Number(item.unitPrice) * item.quantity).toFixed(2)} Birr</p>
+                            <p className="text-xs text-muted-foreground">{Number(item.unitPrice).toFixed(2)} Birr/kg</p>
                           </div>
                         </div>
                       ))}
@@ -316,7 +316,7 @@ Delivery Address: ${order.deliveryAddress}
                 </div>
               </div>
             )}
-            
+
             <button
               onClick={() => setSelectedOrder(null)}
               className="w-full px-4 py-3 border border-border rounded-lg hover:bg-muted font-medium transition-colors"

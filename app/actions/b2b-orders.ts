@@ -15,7 +15,7 @@ export async function submitB2BOrder(orderId: string) {
     if (!requireAuth(authContext)) {
       return { success: false, error: 'Unauthorized' }
     }
-    
+
     const res = await updateOrderStatus(orderId, 'submitted', 'Order submitted by Hotel')
     if (res.error) return { success: false, error: res.error }
 
@@ -32,7 +32,7 @@ export async function reviewOrderForStock(orderId: string) {
     if (!requireAuth(authContext)) {
       return { success: false, error: 'Unauthorized' }
     }
-    
+
     // Store managers are admins
     if (authContext.role !== 'admin' && authContext.role !== 'super_admin') {
       return { success: false, error: 'Unauthorized. Store Manager access required.' }
@@ -54,10 +54,10 @@ export async function approveB2BOrder(orderId: string) {
     if (!requireAuth(authContext)) {
       return { success: false, error: 'Unauthorized' }
     }
-    
-    // Only super_admin can approve
-    if (authContext.role !== 'super_admin') {
-      return { success: false, error: 'Unauthorized. Super Admin access required.' }
+
+    // Both admin and super_admin can approve
+    if (authContext.role !== 'admin' && authContext.role !== 'super_admin') {
+      return { success: false, error: 'Unauthorized. Admin access required.' }
     }
 
     const res = await updateOrderStatus(orderId, 'approved', 'Order approved by Super Admin')
@@ -81,7 +81,13 @@ export async function getHotelOrderDetails(orderId: string) {
     const authContext = await getAuthContext()
     const res = await getOrderDetails(orderId)
     if (res.error) return { success: false, error: res.error }
-    return { success: true, order: res.order, role: authContext?.role }
+    return {
+      success: true,
+      order: res.order,
+      items: res.items || [],
+      history: res.history || [],
+      role: authContext?.role || '',
+    }
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to fetch details' }
   }

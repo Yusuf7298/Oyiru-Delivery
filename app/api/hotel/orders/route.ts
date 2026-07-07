@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm'
 import { getAuthContext, requireAuth } from '@/lib/middleware/role-check'
 import { hasPermission } from '@/lib/utils/permissions'
 import { checkStockAvailability, decrementStock } from '@/lib/services/inventory'
+import { calculateOrderTotal } from '@/lib/services/pricing-service'
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    let { items, totalAmount, deliveryAddress, deliveryNotes, paymentMethod = 'COD' } = body
+    let { items, deliveryAddress, deliveryNotes, paymentMethod = 'COD' } = body
 
     if (!items || items.length === 0) {
       return Response.json({ error: 'Cart is empty' }, { status: 400 })
@@ -57,6 +58,13 @@ export async function POST(request: Request) {
       }
     }
 
+    // Recompute pricing server-side from this hotel's agreed prices.
+    // Never trust the client-supplied price or total.
+    const { items: pricedItems, grandTotal } = await calculateOrderTotal(
+      hotel[0].id,
+      items.map((item: any) => ({ productId: item.productId, quantity: item.quantity }))
+    )
+
     const orderId = uuidv4()
     const orderNumber = `ORD-${Date.now()}`
 
@@ -68,7 +76,7 @@ export async function POST(request: Request) {
         orderNumber,
         userId: authContext.userId,
         hotelAccountId: hotel[0].id,
-        totalAmount: totalAmount.toString(),
+        totalAmount: grandTotal.toFixed(2),
         paymentMethod,
         deliveryAddress,
         deliveryNotes,
@@ -76,13 +84,13 @@ export async function POST(request: Request) {
       })
       .returning()
 
-    // Create order items and decrement stock
-    const orderItemsData = items.map((item: any) => ({
+    // Create order items using server-computed unit prices
+    const orderItemsData = pricedItems.map((item) => ({
       id: uuidv4(),
       orderId,
       productId: item.productId,
       quantity: item.quantity,
-      unitPrice: item.price.toString(),
+      unitPrice: item.unitPrice.toFixed(2),
     }))
 
     await db.insert(oyruOrderItems).values(orderItemsData)

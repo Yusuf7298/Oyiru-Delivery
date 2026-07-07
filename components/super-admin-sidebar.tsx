@@ -44,7 +44,8 @@ export function SuperAdminSidebar() {
 
       <nav className="flex-1 px-4 flex flex-col gap-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+          const isActive = pathname === item.href ||
+            (item.href !== '/super-admin' && pathname.startsWith(item.href + '/'))
           return (
             <Link
               key={item.name}

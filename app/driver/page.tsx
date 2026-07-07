@@ -11,7 +11,7 @@ export default function DeliveryDashboard() {
   const [selectedDelivery, setSelectedDelivery] = useState<any | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-  
+
   // Signature Drawing State
   const [showSignature, setShowSignature] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -32,7 +32,7 @@ export default function DeliveryDashboard() {
 
   const handleStatusChange = async (deliveryId: string, currentStatus: string) => {
     let nextStatus: 'picked_up' | 'in_transit' | 'delivered';
-    
+
     if (currentStatus === 'assigned') {
       nextStatus = 'picked_up'
     } else if (currentStatus === 'picked_up') {
@@ -72,11 +72,11 @@ export default function DeliveryDashboard() {
     ctx.lineWidth = 3
     ctx.lineCap = 'round'
     ctx.strokeStyle = '#6366f1' // Indigo
-    
+
     const rect = canvas.getBoundingClientRect()
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
-    
+
     ctx.beginPath()
     ctx.moveTo(clientX - rect.left, clientY - rect.top)
     setIsDrawing(true)
@@ -88,11 +88,11 @@ export default function DeliveryDashboard() {
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    
+
     const rect = canvas.getBoundingClientRect()
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
-    
+
     ctx.lineTo(clientX - rect.left, clientY - rect.top)
     ctx.stroke()
   }
@@ -119,9 +119,9 @@ export default function DeliveryDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8 overflow-x-hidden">
+      <div className="absolute top-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto relative z-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -140,9 +140,8 @@ export default function DeliveryDashboard() {
         </div>
 
         {message && (
-          <div className={`p-4 rounded-xl mb-6 flex items-center justify-between ${
-            message.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
-          }`}>
+          <div className={`p-4 rounded-xl mb-6 flex items-center justify-between ${message.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+            }`}>
             <span className="font-medium">{message.text}</span>
             <button onClick={() => setMessage(null)} className="opacity-60 hover:opacity-100">✕</button>
           </div>
@@ -177,11 +176,10 @@ export default function DeliveryDashboard() {
                       </h3>
                       <p className="text-xs text-slate-500 mt-1">Assigned on: {new Date(delivery.createdAt).toLocaleDateString()}</p>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border capitalize ${
-                      delivery.deliveryStatus === 'delivered'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
-                    }`}>
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border capitalize ${delivery.deliveryStatus === 'delivered'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                      }`}>
                       {delivery.deliveryStatus.replace('_', ' ')}
                     </span>
                   </div>
@@ -251,9 +249,17 @@ export default function DeliveryDashboard() {
                 </p>
                 <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
                   <canvas
-                    ref={canvasRef}
-                    width={380}
-                    height={180}
+                    ref={(el) => {
+                      canvasRef.current = el
+                      // Set canvas buffer dimensions to match display size on mount
+                      if (el) {
+                        const rect = el.getBoundingClientRect()
+                        if (rect.width > 0 && el.width !== rect.width) {
+                          el.width = rect.width
+                          el.height = 180
+                        }
+                      }
+                    }}
                     onMouseDown={startDrawing}
                     onMouseMove={draw}
                     onMouseUp={stopDrawing}
@@ -261,7 +267,7 @@ export default function DeliveryDashboard() {
                     onTouchStart={startDrawing}
                     onTouchMove={draw}
                     onTouchEnd={stopDrawing}
-                    className="w-full cursor-crosshair h-[180px]"
+                    className="w-full cursor-crosshair h-[180px] touch-none"
                   ></canvas>
                 </div>
 

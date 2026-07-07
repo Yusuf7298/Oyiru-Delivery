@@ -37,11 +37,25 @@ export function AuthForm({ mode, allowedRoles }: { mode: 'sign-in' | 'sign-up', 
     }
 
     try {
-      // On sign-up: create profile row if missing (new users have none yet)
-      // On sign-in: fetch existing profile
-      const profile = isSignUp ? await ensureProfile() : await getUserProfile()
+      // Wait for the session cookie to be readable server-side (cookie round-trip)
+      // Retry ensureProfile up to 3 times with 600ms gap to handle the race condition
+      let profile = null
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          profile = await ensureProfile() // always ensures a profile row exists
+          break
+        } catch {
+          if (attempt < 2) await new Promise(r => setTimeout(r, 600))
+        }
+      }
 
-      if (allowedRoles && profile?.role && !allowedRoles.includes(profile.role)) {
+      if (!profile) {
+        // Session not yet readable — redirect to home, profile will be created on next visit
+        window.location.href = '/'
+        return
+      }
+
+      if (allowedRoles && profile.role && !allowedRoles.includes(profile.role)) {
         await authClient.signOut()
         setError('You are not authorized to access this portal.')
         setLoading(false)
@@ -49,19 +63,17 @@ export function AuthForm({ mode, allowedRoles }: { mode: 'sign-in' | 'sign-up', 
       }
 
       let redirectUrl = '/'
-      const role = profile?.role
+      const role = profile.role
       if (role === 'super_admin') {
         redirectUrl = '/super-admin'
       } else if (role === 'admin') {
         redirectUrl = '/admin'
-      } else if (role === 'delivery_partner' || role === 'delivery') {
+      } else if (role === 'delivery_partner') {
         redirectUrl = '/driver'
-      } else if (role === 'restaurant_owner' || role === 'hotel') {
+      } else if (role === 'restaurant_owner') {
         redirectUrl = '/hotel'
       }
-      // customer or no role → '/' (customer home)
 
-      // Hard redirect so server layouts re-evaluate session
       window.location.href = redirectUrl
     } catch (err) {
       console.error('Failed to get profile after auth:', err)

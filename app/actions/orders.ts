@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { orders, orderItems, dishes, restaurants } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { getUserId } from '@/lib/auth-utils'
+import { getAuthContext, requireRole } from '@/lib/middleware/role-check'
 
 interface OrderItemInput {
   dishId: string

@@ -1,5 +1,4 @@
 'use client'
-
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -10,11 +9,9 @@ interface Stats {
   totalSpent: number
   pendingOrders: number
 }
-
 export default function HotelDashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -113,7 +110,7 @@ export default function HotelDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Order Now */}
           <Link href="/hotel/ordering">
-            <div className="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition-shadow cursor-pointer group">
+            <div className="bg-card border border-border rounded-lg p-4 sm:p-8 hover:shadow-lg transition-shadow cursor-pointer group">
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-4 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
                   <ShoppingCart className="w-8 h-8 text-blue-600" />
@@ -133,7 +130,7 @@ export default function HotelDashboard() {
 
           {/* My Orders */}
           <Link href="/hotel/orders">
-            <div className="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition-shadow cursor-pointer group">
+            <div className="bg-card border border-border rounded-lg p-4 sm:p-8 hover:shadow-lg transition-shadow cursor-pointer group">
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-4 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
                   <BarChart3 className="w-8 h-8 text-green-600" />

@@ -62,7 +62,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Total Customers */}
-          <Link href="/admin/customers" className="bg-[#121212] border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+          <div className="bg-[#121212] border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
             <div className="flex items-center justify-between z-10 relative">
               <div>
                 <p className="text-sm font-medium text-white/50 mb-2">Total Customers</p>
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-colors"></div>
-          </Link>
+          </div>
 
           {/* Total Restaurants */}
           <div className="bg-[#121212] border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden group">

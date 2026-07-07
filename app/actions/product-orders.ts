@@ -39,10 +39,28 @@ export async function createProductOrder(data: {
     const orderId = uuidv4()
     const orderNumber = `ORD-${timestamp}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
 
-    // Calculate order totals
-    const subtotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    const deliveryFee = 5.00
-    const tax = Math.round((subtotal + deliveryFee) * 0.05 * 100) / 100
+    // Load real product prices/stock from the DB — never trust client-supplied prices.
+    const pricedItems = await Promise.all(
+      data.items.map(async (item) => {
+        const product = await db.query.products.findFirst({
+          where: eq(products.id, item.productId),
+        })
+        if (!product) {
+          throw new Error(`Product ${item.productId} is no longer available`)
+        }
+        if (product.stockQuantity < item.quantity) {
+          throw new Error(`Insufficient stock for ${product.name}`)
+        }
+        return { productId: item.productId, quantity: item.quantity, unitPrice: parseFloat(product.price) }
+      })
+    )
+
+    // Calculate totals from trusted DB prices.
+    // NOTE: delivery fee and tax are 0 to match the checkout UI ("Free"). Adjust
+    // here (and in the checkout summary) if a real fee/tax policy is introduced.
+    const subtotal = pricedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+    const deliveryFee = 0
+    const tax = 0
     const total = subtotal + deliveryFee + tax
 
     const fullAddress = `${data.deliveryAddress}, ${data.deliveryCity}`
@@ -51,7 +69,6 @@ export async function createProductOrder(data: {
       data.specialInstructions ? `Notes: ${data.specialInstructions}` : ''
     ].filter(Boolean).join(' | ')
 
-    // We can use a transaction, but simple successive inserts are fine too
     await db.transaction(async (tx) => {
       // Insert order
       await tx.insert(oyruOrders).values({
@@ -64,26 +81,27 @@ export async function createProductOrder(data: {
         status: 'draft',
       })
 
-      // Insert order items
-      for (const item of data.items) {
+      // Insert order items and decrement stock atomically
+      for (const item of pricedItems) {
         await tx.insert(oyruOrderItems).values({
           id: uuidv4(),
           orderId: orderId,
           productId: item.productId,
           quantity: item.quantity,
-          unitPrice: item.price.toString(),
+          unitPrice: item.unitPrice.toString(),
         })
 
-        // We don't necessarily need to reduce inventory dynamically right here if it's not strictly required,
-        // but if we do, we'd fetch the product and update it. Let's do a basic update.
+        // Guarded decrement: re-check stock inside the transaction to avoid
+        // overselling under concurrent orders; roll back if it slipped below.
         const product = await tx.query.products.findFirst({
           where: eq(products.id, item.productId)
         })
-        if (product && product.stockQuantity >= item.quantity) {
-          await tx.update(products)
-            .set({ stockQuantity: product.stockQuantity - item.quantity })
-            .where(eq(products.id, item.productId))
+        if (!product || product.stockQuantity < item.quantity) {
+          throw new Error(`Insufficient stock for product ${item.productId}`)
         }
+        await tx.update(products)
+          .set({ stockQuantity: product.stockQuantity - item.quantity })
+          .where(eq(products.id, item.productId))
       }
     })
 

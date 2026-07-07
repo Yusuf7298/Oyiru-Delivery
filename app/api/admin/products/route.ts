@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   if (!requireAdmin(authContext)) return Response.json({ error: 'Forbidden' }, { status: 403 })
   try {
     const body = await request.json()
-    const { name, description, price, categoryId, stockQuantity } = body
+    const { name, description, price, categoryId, stockQuantity, image } = body
     const newProduct = await db
       .insert(products)
       .values({
@@ -18,10 +18,10 @@ export async function POST(request: Request) {
         price: price.toString(),
         categoryId,
         stockQuantity,
+        image: image || null,
         isAvailable: true,
       })
       .returning()
-
     return Response.json(newProduct[0])
   } catch (error) {
     console.error('Error creating product:', error)

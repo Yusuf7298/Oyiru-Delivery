@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { AuthForm } from '@/components/auth-form'
 import { getAuthContext } from '@/lib/middleware/role-check'
 
-export const revalidate = 0;
+export const dynamic = 'force-dynamic'
 
 export default async function SignInPage() {
   const authContext = await getAuthContext()

@@ -16,7 +16,7 @@ export interface AuthContext {
 export async function getAuthContext(): Promise<AuthContext | null> {
   try {
     const session = await auth.api.getSession({ headers: await headers() })
-    
+
     if (!session?.user?.id) {
       return null
     }
@@ -62,12 +62,12 @@ export function requireCustomer(auth: AuthContext | null): boolean {
 
 export function requireDriver(auth: AuthContext | null): boolean {
   if (!requireAuth(auth)) return false
-  return auth.role === 'delivery_partner'
+  return auth.role === 'delivery_partner' || auth.role === 'delivery'
 }
 
 export function requireRestaurantOwner(auth: AuthContext | null): boolean {
   if (!requireAuth(auth)) return false
-  return auth.role === 'restaurant_owner'
+  return auth.role === 'restaurant_owner' || auth.role === 'hotel'
 }
 
 export async function apiUnauthorized(message = 'Unauthorized') {
@@ -80,7 +80,7 @@ export async function apiForbidden(message = 'Forbidden') {
 
 export function requireHotel(auth: AuthContext | null): boolean {
   if (!requireAuth(auth)) return false
-  return auth.role === 'hotel'
+  return auth.role === 'restaurant_owner' || auth.role === 'hotel'
 }
 
 export function requireDelivery(auth: AuthContext | null): boolean {

@@ -61,18 +61,18 @@ export default function HomePage() {
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-accent/10 to-background border-b border-border/50">
         <div className="absolute inset-0 bg-grid-black/[0.02] dark:bg-grid-white/[0.02]" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 lg:py-28 relative z-10">
           <div className="max-w-2xl animate-in slide-in-from-bottom-6 fade-in duration-700">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg flex-shrink-0">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
+              <span className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-lg flex-shrink-0">
                 <Image src="/logo.jpg" alt="Oyru" fill className="object-cover" sizes="48px" priority />
               </span>
-              <span className="font-bold text-2xl text-foreground tracking-tight">Oyru</span>
+              <span className="font-bold text-xl sm:text-2xl text-foreground tracking-tight">Oyru</span>
             </div>
-            <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-4 sm:mb-6 leading-tight">
               Get Everything <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Delivered</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+            <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
               Browse from thousands of products and get them delivered to your doorstep in 30 minutes.
             </p>
             <div className="flex flex-wrap gap-4">
@@ -92,7 +92,7 @@ export default function HomePage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         {/* Search and Filter Bar */}
-        <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-4 shadow-sm mb-10 sticky top-24 z-30">
+        <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-3 sm:p-4 shadow-sm mb-6 sm:mb-10 sticky top-16 sm:top-20 z-30">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             {/* Search Input */}
             <div className="relative w-full md:max-w-md group flex-1">
@@ -197,7 +197,7 @@ export default function HomePage() {
                         <span className="font-extrabold text-xl text-foreground">
                           {Number(product.price).toFixed(2)} Birr
                         </span>
-                        <div className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 group-hover:scale-110 duration-300">
+                        <div className="p-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 group-hover:scale-110 duration-300">
                           <ShoppingCart className="w-5 h-5" />
                         </div>
                       </div>

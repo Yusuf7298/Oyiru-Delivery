@@ -22,8 +22,10 @@ export type Permission =
 
 export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   customer: ['view_own_orders', 'create_orders'],
-  restaurant_owner: ['view_dashboard', 'manage_products'],
-  delivery_partner: ['accept_deliveries', 'view_own_deliveries'],
+  // restaurant_owner and hotel are the same business entity — keep their
+  // permissions identical so the hotel ordering flow works for either role.
+  restaurant_owner: ['view_hotel_dashboard', 'view_own_orders', 'create_orders'],
+  delivery_partner: ['accept_deliveries', 'view_own_deliveries', 'update_delivery_status'],
   admin: [
     'view_dashboard',
     'manage_products',

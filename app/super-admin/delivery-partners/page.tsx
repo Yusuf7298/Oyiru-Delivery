@@ -129,7 +129,7 @@ export default function AdminDeliveryPartnersPage() {
 
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Total Earnings</p>
-                    <p className="font-semibold text-lg text-primary">{partner.totalEarnings?.toFixed(2) || '0.00'} Birr</p>
+                    <p className="font-semibold text-lg text-primary">{parseFloat(partner.totalEarnings || '0').toFixed(2)} Birr</p>
                   </div>
 
                   <div className="pt-4 border-t border-border space-y-2">
