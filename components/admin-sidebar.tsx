@@ -28,6 +28,7 @@ export function AdminSidebar({ role }: { role?: string }) {
     { name: 'Inventory', href: '/admin/inventory', icon: Store },
     { name: 'Approvals / Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Shipments', href: '/admin/oyru-orders', icon: Truck },
+    { name: 'Returns', href: '/admin/returns', icon: RotateCcw },
     { name: 'Reports', href: '/admin/reports', icon: LineChart },
     { name: 'Profile', href: '/profile', icon: Users },
   ]

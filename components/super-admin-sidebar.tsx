@@ -14,7 +14,8 @@ import {
   LogOut,
   Shield,
   FileText,
-  Package
+  Package,
+  RotateCcw
 } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 
@@ -29,6 +30,7 @@ export function SuperAdminSidebar() {
     { name: 'Deliveries', href: '/super-admin/delivery-partners', icon: Truck },
     { name: 'Users / Staff', href: '/super-admin/staff', icon: Shield },
     { name: 'Customers', href: '/super-admin/customers', icon: Users },
+    { name: 'Returns', href: '/super-admin/returns', icon: RotateCcw },
     { name: 'Reports', href: '/super-admin/reports', icon: LineChart },
     { name: 'Settings', href: '/super-admin/settings', icon: Settings },
     { name: 'Profile', href: '/profile', icon: Users },
