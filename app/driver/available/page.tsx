@@ -10,7 +10,7 @@ interface Delivery {
   id: string
   orderNumber: string
   deliveryAddress: string
-  totalAmount: number
+  totalAmount: string | number
   status: string
   createdAt: string
 }
@@ -109,7 +109,7 @@ export default function AvailableDeliveries() {
                       <DollarSign className="w-4 h-4" />
                       Delivery Fee
                     </p>
-                    <p className="font-bold text-primary text-lg">{delivery.totalAmount.toFixed(2)} Birr</p>
+                    <p className="font-bold text-primary text-lg">{parseFloat(String(delivery.totalAmount || 0)).toFixed(2)} Birr</p>
                   </div>
 
                   {/* Action */}

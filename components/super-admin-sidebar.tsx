@@ -23,14 +23,15 @@ export function SuperAdminSidebar() {
 
   const navItems = [
     { name: 'Overview', href: '/super-admin', icon: BarChart3 },
-    { name: 'Agreements', href: '/super-admin/hotels', icon: FileText }, // Hotels / Agreements 
+    { name: 'Agreements', href: '/super-admin/hotels', icon: FileText },
     { name: 'Products', href: '/super-admin/products', icon: Package },
-    { name: 'Approvals', href: '/super-admin/oyru-orders', icon: ShoppingCart }, // Orders to approve
+    { name: 'Approvals', href: '/super-admin/oyru-orders', icon: ShoppingCart },
     { name: 'Deliveries', href: '/super-admin/delivery-partners', icon: Truck },
     { name: 'Users / Staff', href: '/super-admin/staff', icon: Shield },
     { name: 'Customers', href: '/super-admin/customers', icon: Users },
     { name: 'Reports', href: '/super-admin/reports', icon: LineChart },
     { name: 'Settings', href: '/super-admin/settings', icon: Settings },
+    { name: 'Profile', href: '/profile', icon: Users },
   ]
 
   return (
@@ -66,7 +67,7 @@ export function SuperAdminSidebar() {
         <button
           onClick={async () => {
             await signOut();
-            window.location.href = '/sign-in';
+            window.location.href = '/auth-superadmin-s9k3';
           }}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 transition-colors font-medium"
         >

@@ -27,8 +27,9 @@ export function AdminSidebar({ role }: { role?: string }) {
     { name: 'Overview', href: '/admin', icon: BarChart3 },
     { name: 'Inventory', href: '/admin/inventory', icon: Store },
     { name: 'Approvals / Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Shipments', href: '/admin/orders', icon: Truck },
+    { name: 'Shipments', href: '/admin/oyru-orders', icon: Truck },
     { name: 'Reports', href: '/admin/reports', icon: LineChart },
+    { name: 'Profile', href: '/profile', icon: Users },
   ]
 
   return (
@@ -63,7 +64,7 @@ export function AdminSidebar({ role }: { role?: string }) {
         <button
           onClick={async () => {
             await signOut();
-            window.location.href = '/';
+            window.location.href = '/auth-admin-x7f9';
           }}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 transition-colors font-medium"
         >
