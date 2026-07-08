@@ -19,10 +19,10 @@ export async function submitOrderFeedback(orderId: string, rating: number, comme
   })
 
   if (!order || order.userId !== userId) throw new Error('Order not found or unauthorized')
-  if (order.status !== 'delivered') throw new Error('Can only leave feedback for delivered orders')
+  if (order.status !== 'delivered' && order.status !== 'completed') throw new Error('Can only leave feedback for delivered or completed orders')
 
   const id = `fdbk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  
+
   await db.insert(oyruOrderFeedbacks).values({
     id,
     orderId,
@@ -46,10 +46,10 @@ export async function requestOrderReturn(orderId: string, reason: string, items:
   })
 
   if (!order || order.userId !== userId) throw new Error('Order not found or unauthorized')
-  if (order.status !== 'delivered') throw new Error('Can only return delivered orders')
+  if (order.status !== 'delivered' && order.status !== 'completed') throw new Error('Can only return delivered or completed orders')
 
   const returnId = `ret_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  
+
   await db.insert(oyruOrderReturns).values({
     id: returnId,
     orderId,
@@ -76,7 +76,7 @@ export async function requestOrderReturn(orderId: string, reason: string, items:
 export async function getOrderFeedback(orderId: string) {
   const userId = await getUserId()
   if (!userId) return null
-  
+
   const feedback = await db.query.oyruOrderFeedbacks.findFirst({
     where: eq(oyruOrderFeedbacks.orderId, orderId)
   })
@@ -86,7 +86,7 @@ export async function getOrderFeedback(orderId: string) {
 export async function getOrderReturn(orderId: string) {
   const userId = await getUserId()
   if (!userId) return null
-  
+
   const orderReturn = await db.query.oyruOrderReturns.findFirst({
     where: eq(oyruOrderReturns.orderId, orderId)
   })
@@ -100,10 +100,10 @@ export async function getOrderReturn(orderId: string) {
     quantity: oyruOrderReturnItems.quantity,
     name: products.name
   })
-  .from(oyruOrderReturnItems)
-  .innerJoin(oyruOrderItems, eq(oyruOrderReturnItems.orderItemId, oyruOrderItems.id))
-  .innerJoin(products, eq(oyruOrderItems.productId, products.id))
-  .where(eq(oyruOrderReturnItems.returnId, orderReturn.id))
+    .from(oyruOrderReturnItems)
+    .innerJoin(oyruOrderItems, eq(oyruOrderReturnItems.orderItemId, oyruOrderItems.id))
+    .innerJoin(products, eq(oyruOrderItems.productId, products.id))
+    .where(eq(oyruOrderReturnItems.returnId, orderReturn.id))
 
   return {
     ...orderReturn,
@@ -118,11 +118,11 @@ export async function getOrderReturn(orderId: string) {
 async function ensureAdmin() {
   const userId = await getUserId()
   if (!userId) throw new Error('Unauthorized')
-  
+
   const profile = await db.query.usersProfile.findFirst({
     where: eq(usersProfile.userId, userId)
   })
-  
+
   if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
     throw new Error('Forbidden')
   }
@@ -141,10 +141,10 @@ export async function getAllFeedbacksAdmin() {
     customerName: user.name,
     customerEmail: user.email
   })
-  .from(oyruOrderFeedbacks)
-  .innerJoin(oyruOrders, eq(oyruOrderFeedbacks.orderId, oyruOrders.id))
-  .innerJoin(user, eq(oyruOrderFeedbacks.userId, user.id))
-  .orderBy(desc(oyruOrderFeedbacks.createdAt))
+    .from(oyruOrderFeedbacks)
+    .innerJoin(oyruOrders, eq(oyruOrderFeedbacks.orderId, oyruOrders.id))
+    .innerJoin(user, eq(oyruOrderFeedbacks.userId, user.id))
+    .orderBy(desc(oyruOrderFeedbacks.createdAt))
 
   return feedbacks
 }
@@ -164,10 +164,10 @@ export async function getAllReturnsAdmin() {
     customerName: user.name,
     customerEmail: user.email
   })
-  .from(oyruOrderReturns)
-  .innerJoin(oyruOrders, eq(oyruOrderReturns.orderId, oyruOrders.id))
-  .innerJoin(user, eq(oyruOrderReturns.userId, user.id))
-  .orderBy(desc(oyruOrderReturns.createdAt))
+    .from(oyruOrderReturns)
+    .innerJoin(oyruOrders, eq(oyruOrderReturns.orderId, oyruOrders.id))
+    .innerJoin(user, eq(oyruOrderReturns.userId, user.id))
+    .orderBy(desc(oyruOrderReturns.createdAt))
 
   // Fetch items for each return
   const returnsWithItems = await Promise.all(returns.map(async (ret) => {
@@ -178,10 +178,10 @@ export async function getAllReturnsAdmin() {
       image: products.image,
       unitPrice: oyruOrderItems.unitPrice
     })
-    .from(oyruOrderReturnItems)
-    .innerJoin(oyruOrderItems, eq(oyruOrderReturnItems.orderItemId, oyruOrderItems.id))
-    .innerJoin(products, eq(oyruOrderItems.productId, products.id))
-    .where(eq(oyruOrderReturnItems.returnId, ret.id))
+      .from(oyruOrderReturnItems)
+      .innerJoin(oyruOrderItems, eq(oyruOrderReturnItems.orderItemId, oyruOrderItems.id))
+      .innerJoin(products, eq(oyruOrderItems.productId, products.id))
+      .where(eq(oyruOrderReturnItems.returnId, ret.id))
 
     return {
       ...ret,
@@ -209,16 +209,16 @@ export async function updateReturnStatusAdmin(returnId: string, status: string, 
       productId: oyruOrderItems.productId,
       unitPrice: oyruOrderItems.unitPrice
     })
-    .from(oyruOrderReturnItems)
-    .innerJoin(oyruOrderItems, eq(oyruOrderReturnItems.orderItemId, oyruOrderItems.id))
-    .where(eq(oyruOrderReturnItems.returnId, returnId))
+      .from(oyruOrderReturnItems)
+      .innerJoin(oyruOrderItems, eq(oyruOrderReturnItems.orderItemId, oyruOrderItems.id))
+      .where(eq(oyruOrderReturnItems.returnId, returnId))
 
     let refundAmount = 0
 
     // 2. Add back to inventory and calculate refund amount
     for (const item of returnItems) {
       refundAmount += parseFloat(item.unitPrice) * item.quantity
-      
+
       const product = await db.query.products.findFirst({
         where: eq(products.id, item.productId)
       })
@@ -244,8 +244,8 @@ export async function updateReturnStatusAdmin(returnId: string, status: string, 
   }
 
   await db.update(oyruOrderReturns)
-    .set({ 
-      status: status as any, 
+    .set({
+      status: status as any,
       adminNotes,
       updatedAt: new Date()
     })

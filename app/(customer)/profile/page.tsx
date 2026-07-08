@@ -61,10 +61,35 @@ export default function ProfilePage() {
     loadUserData()
   }, [router])
 
+  const getBackLink = (role: string) => {
+    switch (role) {
+      case 'admin': return { href: '/admin', label: '← Admin Dashboard' }
+      case 'super_admin': return { href: '/super-admin', label: '← Super Admin Dashboard' }
+      case 'restaurant_owner':
+      case 'hotel': return { href: '/hotel', label: '← Hotel Dashboard' }
+      case 'delivery_partner':
+      case 'delivery': return { href: '/driver', label: '← Driver Dashboard' }
+      default: return { href: '/', label: '← Back Home' }
+    }
+  }
+
+  const getSignOutRedirect = (role: string) => {
+    switch (role) {
+      case 'admin': return '/auth-admin-x7f9'
+      case 'super_admin': return '/auth-superadmin-s9k3'
+      case 'restaurant_owner':
+      case 'hotel': return '/auth-hotel-m4p2'
+      case 'delivery_partner':
+      case 'delivery': return '/auth-driver-k9v1'
+      default: return '/sign-in'
+    }
+  }
+
   const handleLogout = async () => {
     try {
+      const role = profile?.role || 'customer'
       await authClient.signOut()
-      router.push('/')
+      router.push(getSignOutRedirect(role))
       router.refresh()
     } catch (error) {
       console.error('Logout failed:', error)
@@ -153,9 +178,14 @@ export default function ProfilePage() {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop')] mix-blend-overlay opacity-30 bg-cover bg-center"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
         <div className="max-w-5xl mx-auto px-4 h-full relative">
-          <Link href="/" className="absolute top-6 left-4 bg-background/20 hover:bg-background/40 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2">
-            ← Back Home
-          </Link>
+          {(() => {
+            const { href, label } = getBackLink(profile?.role || 'customer')
+            return (
+              <Link href={href} className="absolute top-6 left-4 bg-background/20 hover:bg-background/40 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2">
+                {label}
+              </Link>
+            )
+          })()}
         </div>
       </div>
 
