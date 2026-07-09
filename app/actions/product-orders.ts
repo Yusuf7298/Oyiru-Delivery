@@ -78,7 +78,7 @@ export async function createProductOrder(data: {
         totalAmount: total.toString(),
         deliveryAddress: fullAddress,
         deliveryNotes: notes,
-        status: 'draft',
+        status: 'submitted',
       })
 
       // Insert order items and decrement stock atomically

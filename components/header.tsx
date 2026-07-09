@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/lib/contexts/cart-context'
 import { ShoppingCart, Menu } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession, signOut } from '@/lib/auth-client'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -15,16 +15,45 @@ export function Header() {
   const { data: session } = useSession()
   const router = useRouter()
   const pathname = usePathname()
+  const [role, setRole] = useState<string | null>(null)
 
+  useEffect(() => {
+    async function loadRole() {
+      if (session?.user) {
+        try {
+          const { getUserProfile } = await import('@/app/actions/users')
+          const p = await getUserProfile()
+          if (p) {
+            setRole(p.role)
+          }
+        } catch (err) {
+          console.error('Error fetching role in header:', err)
+        }
+      } else {
+        setRole(null)
+      }
+    }
+    loadRole()
+  }, [session])
+
+  const isStaff = role && role !== 'customer'
+
+  // Hide header entirely for auth routes, sign pages, and staff users
   if (pathname.startsWith('/admin') ||
-    pathname.startsWith('/super-admin') ||
-    pathname.startsWith('/driver') ||
-    pathname.startsWith('/hotel') ||
-    pathname.startsWith('/sign-in') ||
-    pathname.startsWith('/sign-up') ||
-    pathname.startsWith('/auth-')) {
+      pathname.startsWith('/super-admin') ||
+      pathname.startsWith('/driver') ||
+      pathname.startsWith('/hotel') ||
+      pathname.startsWith('/sign-in') ||
+      pathname.startsWith('/sign-up') ||
+      pathname.startsWith('/auth-') ||
+      isStaff) {
     return null
   }
+
+  // Determine whether to show user action icons/links (cart, profile, sign out)
+  const hideUserActions =
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/cart')
 
   const handleSignOut = async () => {
     await signOut()
@@ -56,16 +85,20 @@ export function Header() {
 
           {/* Right Icons */}
           <div className="flex items-center gap-5">
-            <Link href="/cart" className="relative p-2 rounded-full hover:bg-primary/10 text-foreground hover:text-primary transition-all duration-300 group">
-              <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-              {itemCount > 0 && (
-                <span className="absolute 0 top-0 right-0 w-4 h-4 rounded-full bg-destructive text-white text-[10px] flex items-center justify-center font-bold shadow-lg shadow-destructive/40 animate-in zoom-in">
-                  {itemCount}
-                </span>
-              )}
-            </Link>
+            {/* Cart Icon */}
+            {!hideUserActions && (
+              <Link href="/cart" className="relative p-2 rounded-full hover:bg-primary/10 text-foreground hover:text-primary transition-all duration-300 group">
+                <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                {itemCount > 0 && (
+                  <span className="absolute 0 top-0 right-0 w-4 h-4 rounded-full bg-destructive text-white text-[10px] flex items-center justify-center font-bold shadow-lg shadow-destructive/40 animate-in zoom-in">
+                    {itemCount}
+                  </span>
+                )}
+              </Link>
+            )}
 
-            {session ? (
+            {/* Profile / Sign Out */}
+            {session && !hideUserActions ? (
               <div className="hidden sm:flex items-center gap-2">
                 <Link href="/profile" className="px-4 py-2 text-sm font-semibold rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-300">
                   My Profile
@@ -74,7 +107,7 @@ export function Header() {
                   Sign Out
                 </button>
               </div>
-            ) : (
+            ) : (!session && !hideUserActions) ? (
               <div className="hidden sm:flex items-center gap-3">
                 <Link href="/sign-in" className="px-4 py-2 text-sm font-semibold rounded-full hover:bg-muted transition-all duration-300">
                   Sign In
@@ -83,15 +116,17 @@ export function Header() {
                   Sign Up
                 </Link>
               </div>
-            )}
+            ) : null}
 
             {/* Mobile Menu Button */}
-            <button
-              className="sm:hidden p-2 rounded-full hover:bg-muted transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+            {!hideUserActions && (
+              <button
+                className="sm:hidden p-2 rounded-full hover:bg-muted transition-colors"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -112,7 +147,7 @@ export function Header() {
             >
               Orders
             </Link>
-            {session ? (
+            {session && !hideUserActions ? (
               <>
                 <Link
                   href="/profile"
@@ -131,7 +166,7 @@ export function Header() {
                   Sign Out
                 </button>
               </>
-            ) : (
+            ) : (!session && !hideUserActions) ? (
               <div className="grid grid-cols-2 gap-2 px-4 pt-2">
                 <Link
                   href="/sign-in"
@@ -148,7 +183,7 @@ export function Header() {
                   Sign Up
                 </Link>
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>
