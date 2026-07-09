@@ -15,7 +15,9 @@ import {
   Shield,
   FileText,
   Package,
-  RotateCcw
+  RotateCcw,
+  MessageSquare,
+  User
 } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 
@@ -31,9 +33,10 @@ export function SuperAdminSidebar() {
     { name: 'Users / Staff', href: '/super-admin/staff', icon: Shield },
     { name: 'Customers', href: '/super-admin/customers', icon: Users },
     { name: 'Returns', href: '/super-admin/returns', icon: RotateCcw },
+    { name: 'Feedbacks', href: '/super-admin/feedbacks', icon: MessageSquare },
     { name: 'Reports', href: '/super-admin/reports', icon: LineChart },
     { name: 'Settings', href: '/super-admin/settings', icon: Settings },
-    { name: 'Profile', href: '/profile', icon: Users },
+    { name: 'Profile', href: '/profile', icon: User },
   ]
 
   return (

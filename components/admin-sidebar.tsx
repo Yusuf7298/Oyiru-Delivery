@@ -29,6 +29,7 @@ export function AdminSidebar({ role }: { role?: string }) {
     { name: 'Approvals / Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Shipments', href: '/admin/oyru-orders', icon: Truck },
     { name: 'Returns', href: '/admin/returns', icon: RotateCcw },
+    { name: 'Feedbacks', href: '/admin/feedbacks', icon: MessageSquare },
     { name: 'Reports', href: '/admin/reports', icon: LineChart },
     { name: 'Profile', href: '/profile', icon: Users },
   ]
@@ -44,7 +45,7 @@ export function AdminSidebar({ role }: { role?: string }) {
 
       <nav className="flex-1 px-4 flex flex-col gap-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href + '/'))
           return (
             <Link
               key={item.name}
