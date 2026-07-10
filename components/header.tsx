@@ -21,10 +21,10 @@ export function Header() {
     async function loadRole() {
       if (session?.user) {
         try {
-          const { getUserProfile } = await import('@/app/actions/users')
-          const p = await getUserProfile()
-          if (p) {
-            setRole(p.role)
+          const res = await fetch('/api/auth/role')
+          if (res.ok) {
+            const data = await res.json()
+            setRole(data.role)
           }
         } catch (err) {
           console.error('Error fetching role in header:', err)
