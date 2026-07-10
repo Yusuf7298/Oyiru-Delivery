@@ -47,10 +47,12 @@ export const OYRU_TRANSITION_PERMISSIONS: Record<string, { from: OyruOrderStatus
   hotel: [
     { from: 'draft', to: 'submitted' },
     { from: 'draft', to: 'cancelled' },
+    { from: 'delivered', to: 'completed' },
   ],
   restaurant_owner: [
     { from: 'draft', to: 'submitted' },
     { from: 'draft', to: 'cancelled' },
+    { from: 'delivered', to: 'completed' },
   ],
   // admin and super_admin have identical full control over all transitions
   admin: [
@@ -84,12 +86,10 @@ export const OYRU_TRANSITION_PERMISSIONS: Record<string, { from: OyruOrderStatus
   delivery: [
     { from: 'assigned', to: 'shipped' },
     { from: 'shipped', to: 'delivered' },
-    { from: 'delivered', to: 'completed' },
   ],
   delivery_partner: [
     { from: 'assigned', to: 'shipped' },
     { from: 'shipped', to: 'delivered' },
-    { from: 'delivered', to: 'completed' },
   ],
 }
 

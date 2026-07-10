@@ -1,9 +1,10 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { oyruOrderFeedbacks, oyruOrderReturns, oyruOrderReturnItems, oyruOrders, oyruOrderItems, usersProfile, user, products } from '@/lib/db/schema'
+import { oyruOrderFeedbacks, oyruOrderReturns, oyruOrderReturnItems, oyruOrders, oyruOrderItems, usersProfile, user, products, orderStatusHistory, hotelAccounts } from '@/lib/db/schema'
 import { eq, desc, inArray } from 'drizzle-orm'
 import { getUserId } from '@/lib/auth-utils'
+import { v4 as uuidv4 } from 'uuid'
 
 // ==========================================
 // Customer Actions
@@ -38,9 +39,17 @@ export async function requestOrderReturn(orderId: string, reason: string, items:
   const userId = await getUserId()
   if (!userId) throw new Error('Unauthorized')
 
+  const profile = await db.query.usersProfile.findFirst({
+    where: eq(usersProfile.userId, userId)
+  })
+
+  if (profile?.role !== 'hotel' && profile?.role !== 'restaurant_owner') {
+    throw new Error('Forbidden: Only hotels can request returns')
+  }
+
   if (!items || items.length === 0) throw new Error('Must select at least one item to return')
 
-  // Verify order belongs to user and is delivered
+  // Verify order belongs to user and is delivered or completed
   const order = await db.query.oyruOrders.findFirst({
     where: eq(oyruOrders.id, orderId)
   })
@@ -50,25 +59,49 @@ export async function requestOrderReturn(orderId: string, reason: string, items:
 
   const returnId = `ret_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-  await db.insert(oyruOrderReturns).values({
-    id: returnId,
-    orderId,
-    userId,
-    reason,
-    status: 'pending'
+  await db.transaction(async (tx) => {
+    await tx.insert(oyruOrderReturns).values({
+      id: returnId,
+      orderId,
+      userId,
+      reason,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    // Insert individual items
+    for (const item of items) {
+      if (item.quantity > 0) {
+        await tx.insert(oyruOrderReturnItems).values({
+          id: `ret_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          returnId,
+          orderItemId: item.orderItemId,
+          quantity: item.quantity,
+          createdAt: new Date(),
+        })
+      }
+    }
+
+    // Log return request in orderStatusHistory
+    await tx.insert(orderStatusHistory).values({
+      id: uuidv4(),
+      orderId,
+      fromStatus: order.status || null,
+      toStatus: order.status || 'completed',
+      changedBy: userId,
+      reason: `Hotel Hilton requested return for Order #${order.orderNumber}. Reason: ${reason}`,
+      createdAt: new Date(),
+    })
   })
 
-  // Insert individual items
-  for (const item of items) {
-    if (item.quantity > 0) {
-      await db.insert(oyruOrderReturnItems).values({
-        id: `ret_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        returnId,
-        orderItemId: item.orderItemId,
-        quantity: item.quantity
-      })
-    }
-  }
+  // Notify Super Admin
+  const { sendOrderStatusNotification } = await import('@/lib/services/notification-service')
+  await sendOrderStatusNotification({
+    orderNumber: order.orderNumber,
+    newStatus: 'submitted',
+    additionalMessage: `Hotel Hilton requested return for Order #${order.orderNumber}. Reason: ${reason}`,
+  })
 
   return { success: true }
 }
@@ -250,6 +283,310 @@ export async function updateReturnStatusAdmin(returnId: string, status: string, 
       updatedAt: new Date()
     })
     .where(eq(oyruOrderReturns.id, returnId))
+
+  return { success: true }
+}
+
+export async function confirmB2BDelivery(orderId: string, rating: number, comment?: string) {
+  const userId = await getUserId()
+  if (!userId) throw new Error('Unauthorized')
+
+  const profile = await db.query.usersProfile.findFirst({
+    where: eq(usersProfile.userId, userId)
+  })
+
+  if (profile?.role !== 'hotel' && profile?.role !== 'restaurant_owner') {
+    throw new Error('Forbidden: Only hotels can confirm delivery')
+  }
+
+  const order = await db.query.oyruOrders.findFirst({
+    where: eq(oyruOrders.id, orderId)
+  })
+
+  if (!order || order.userId !== userId) throw new Error('Order not found')
+  if (order.status !== 'delivered') throw new Error('Order must be delivered before confirming')
+
+  await db.transaction(async (tx) => {
+    // 1. Update order status to completed
+    await tx
+      .update(oyruOrders)
+      .set({ status: 'completed', updatedAt: new Date() })
+      .where(eq(oyruOrders.id, orderId))
+
+    // 2. Insert feedback/rating if provided
+    if (rating) {
+      await tx.insert(oyruOrderFeedbacks).values({
+        id: `fdbk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        orderId,
+        userId,
+        rating,
+        comment: comment || null,
+      })
+    }
+
+    // 3. Log to status history
+    await tx.insert(orderStatusHistory).values({
+      id: uuidv4(),
+      orderId,
+      fromStatus: 'delivered',
+      toStatus: 'completed',
+      changedBy: userId,
+      reason: 'Delivery confirmed and completed by Hotel',
+      createdAt: new Date(),
+    })
+  })
+
+  // Send notifications
+  const { sendOrderStatusNotification } = await import('@/lib/services/notification-service')
+  await sendOrderStatusNotification({
+    orderNumber: order.orderNumber,
+    newStatus: 'completed',
+    hotelAccountId: order.hotelAccountId,
+    additionalMessage: `Hotel ${profile.phoneNumber || ''} confirmed and completed delivery of Order #${order.orderNumber}.`,
+  })
+
+  return { success: true }
+}
+
+export async function reviewB2BReturnRequest(
+  returnId: string, 
+  approve: boolean, 
+  data?: { driverId?: string, reason?: string }
+) {
+  const userId = await getUserId()
+  if (!userId) throw new Error('Unauthorized')
+
+  const profile = await db.query.usersProfile.findFirst({
+    where: eq(usersProfile.userId, userId)
+  })
+
+  if (profile?.role !== 'super_admin') {
+    throw new Error('Forbidden: Only Super Admin can approve/reject B2B returns')
+  }
+
+  const orderReturn = await db.query.oyruOrderReturns.findFirst({
+    where: eq(oyruOrderReturns.id, returnId)
+  })
+
+  if (!orderReturn) throw new Error('Return request not found')
+
+  const order = await db.query.oyruOrders.findFirst({
+    where: eq(oyruOrders.id, orderReturn.orderId)
+  })
+
+  if (!order) throw new Error('Associated order not found')
+
+  const newStatus = approve ? 'approved' : 'rejected'
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(oyruOrderReturns)
+      .set({
+        status: newStatus,
+        driverId: approve ? (data?.driverId || null) : null,
+        rejectionReason: !approve ? (data?.reason || null) : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(oyruOrderReturns.id, returnId))
+
+    // Log in orderStatusHistory
+    await tx.insert(orderStatusHistory).values({
+      id: uuidv4(),
+      orderId: order.id,
+      fromStatus: order.status || null,
+      toStatus: order.status || 'approved', // order status remains as is
+      changedBy: userId,
+      reason: approve
+        ? `Super Admin approved return request. Assigned driver: ${data?.driverId}`
+        : `Super Admin rejected return request. Reason: ${data?.reason}`,
+      createdAt: new Date(),
+    })
+  })
+
+  // Send notifications
+  const { sendOrderStatusNotification, sendDriverNotification } = await import('@/lib/services/notification-service')
+  
+  if (approve) {
+    await sendOrderStatusNotification({
+      orderNumber: order.orderNumber,
+      newStatus: 'approved',
+      hotelAccountId: order.hotelAccountId,
+      additionalMessage: `Your return request for Order #${order.orderNumber} has been APPROVED. A driver has been assigned.`,
+    })
+    if (data?.driverId) {
+      await sendDriverNotification({
+        driverUserId: data.driverId,
+        message: `New return collection assigned. Please collect items from Hilton Hotel/delivery address.`,
+      })
+    }
+  } else {
+    await sendOrderStatusNotification({
+      orderNumber: order.orderNumber,
+      newStatus: 'rejected',
+      hotelAccountId: order.hotelAccountId,
+      additionalMessage: `Your return request for Order #${order.orderNumber} has been REJECTED. Reason: ${data?.reason}`,
+    })
+  }
+
+  return { success: true }
+}
+
+export async function collectB2BReturnedProducts(returnId: string) {
+  const userId = await getUserId()
+  if (!userId) throw new Error('Unauthorized')
+
+  const profile = await db.query.usersProfile.findFirst({
+    where: eq(usersProfile.userId, userId)
+  })
+
+  if (profile?.role !== 'delivery' && profile?.role !== 'delivery_partner') {
+    throw new Error('Forbidden: Only delivery drivers can collect returns')
+  }
+
+  const orderReturn = await db.query.oyruOrderReturns.findFirst({
+    where: eq(oyruOrderReturns.id, returnId)
+  })
+
+  if (!orderReturn) throw new Error('Return request not found')
+  if (orderReturn.driverId !== userId) throw new Error('Forbidden: You are not the driver assigned to this return')
+  if (orderReturn.status !== 'approved') throw new Error('Return request must be approved first')
+
+  const order = await db.query.oyruOrders.findFirst({
+    where: eq(oyruOrders.id, orderReturn.orderId)
+  })
+
+  if (!order) throw new Error('Associated order not found')
+
+  const hotel = await db.query.hotelAccounts.findFirst({
+    where: eq(hotelAccounts.id, order.hotelAccountId || '')
+  })
+  const hotelName = hotel?.companyName || 'Hilton Hotel'
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(oyruOrderReturns)
+      .set({
+        status: 'collected',
+        updatedAt: new Date(),
+      })
+      .where(eq(oyruOrderReturns.id, returnId))
+
+    await tx.insert(orderStatusHistory).values({
+      id: uuidv4(),
+      orderId: order.id,
+      fromStatus: order.status || null,
+      toStatus: order.status || 'approved',
+      changedBy: userId,
+      reason: `Driver ${profile.phoneNumber || ''} collected returned products from ${hotelName}.`,
+      createdAt: new Date(),
+    })
+  })
+
+  // Send notifications
+  const { sendOrderStatusNotification } = await import('@/lib/services/notification-service')
+  await sendOrderStatusNotification({
+    orderNumber: order.orderNumber,
+    newStatus: 'shipped', // map to shipped/collected notification
+    additionalMessage: `Driver ${profile.phoneNumber || ''} collected returned products from ${hotelName} for Order #${order.orderNumber}.`,
+  })
+
+  return { success: true }
+}
+
+export async function inspectB2BReturnedProducts(returnId: string, accept: boolean, rejectReason?: string) {
+  const userId = await getUserId()
+  if (!userId) throw new Error('Unauthorized')
+
+  const profile = await db.query.usersProfile.findFirst({
+    where: eq(usersProfile.userId, userId)
+  })
+
+  if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+    throw new Error('Forbidden: Only Store Manager (Admin) or Super Admin can inspect returned products')
+  }
+
+  const orderReturn = await db.query.oyruOrderReturns.findFirst({
+    where: eq(oyruOrderReturns.id, returnId)
+  })
+
+  if (!orderReturn) throw new Error('Return request not found')
+  if (orderReturn.status !== 'collected') throw new Error('Return items must be collected by driver before inspection')
+
+  const order = await db.query.oyruOrders.findFirst({
+    where: eq(oyruOrders.id, orderReturn.orderId)
+  })
+
+  if (!order) throw new Error('Associated order not found')
+
+  const managerName = profile.phoneNumber || 'Ahmed'
+
+  await db.transaction(async (tx) => {
+    const newStatus = accept ? 'completed' : 'rejected'
+
+    await tx
+      .update(oyruOrderReturns)
+      .set({
+        status: newStatus,
+        rejectionReason: !accept ? (rejectReason || null) : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(oyruOrderReturns.id, returnId))
+
+    if (accept) {
+      // 1. Fetch return items
+      const returnItems = await tx.select({
+        productId: oyruOrderItems.productId,
+        quantity: oyruOrderReturnItems.quantity,
+      })
+        .from(oyruOrderReturnItems)
+        .innerJoin(oyruOrderItems, eq(oyruOrderReturnItems.orderItemId, oyruOrderItems.id))
+        .where(eq(oyruOrderReturnItems.returnId, returnId))
+
+      // 2. Increment stock quantities
+      for (const item of returnItems) {
+        const product = await tx.query.products.findFirst({
+          where: eq(products.id, item.productId)
+        })
+        if (product) {
+          await tx
+            .update(products)
+            .set({ stockQuantity: product.stockQuantity + item.quantity })
+            .where(eq(products.id, item.productId))
+        }
+      }
+    }
+
+    await tx.insert(orderStatusHistory).values({
+      id: uuidv4(),
+      orderId: order.id,
+      fromStatus: order.status || null,
+      toStatus: order.status || 'approved',
+      changedBy: userId,
+      reason: accept
+        ? `Store Manager ${managerName} accepted returned products. Inventory updated.`
+        : `Store Manager ${managerName} rejected returned products. Reason: ${rejectReason}`,
+      createdAt: new Date(),
+    })
+  })
+
+  // Send notifications
+  const { sendOrderStatusNotification } = await import('@/lib/services/notification-service')
+  
+  if (accept) {
+    await sendOrderStatusNotification({
+      orderNumber: order.orderNumber,
+      newStatus: 'completed',
+      hotelAccountId: order.hotelAccountId,
+      additionalMessage: `Store Manager ${managerName} accepted returned products for Order #${order.orderNumber}. Return workflow completed successfully.`,
+    })
+  } else {
+    await sendOrderStatusNotification({
+      orderNumber: order.orderNumber,
+      newStatus: 'rejected',
+      hotelAccountId: order.hotelAccountId,
+      additionalMessage: `Store Manager ${managerName} rejected returned products for Order #${order.orderNumber}. Reason: ${rejectReason}`,
+    })
+  }
 
   return { success: true }
 }

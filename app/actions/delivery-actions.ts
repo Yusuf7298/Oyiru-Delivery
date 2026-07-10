@@ -91,20 +91,34 @@ export async function updateDeliveryStatus(deliveryId: string, newStatus: 'picke
           .set({ status: orderStatus as any, updatedAt: new Date() })
           .where(eq(oyruOrders.id, delivery[0].orderId))
 
-        await db.insert(orderStatusHistory).values({
-          id: uuidv4(),
-          orderId: delivery[0].orderId,
-          fromStatus: order[0].status,
-          toStatus: orderStatus,
-          changedBy: auth.userId,
-          reason: `Delivery status: ${newStatus}`,
-          createdAt: new Date(),
+        const driver = await db.query.user.findFirst({
+          where: eq(user.id, auth.userId)
         })
+        const driverName = driver?.name || 'Driver'
+        let actionMsg = ''
+        if (newStatus === 'picked_up') {
+          actionMsg = `Driver ${driverName} picked up Order #${order[0].orderNumber}.`
+        } else if (newStatus === 'in_transit') {
+          actionMsg = `Driver ${driverName} is now In Transit for Order #${order[0].orderNumber}.`
+        } else if (newStatus === 'delivered') {
+          actionMsg = `Driver ${driverName} marked Order #${order[0].orderNumber} as Delivered.`
+        }
+
+        await db.insert(orderStatusHistory).values({
+           id: uuidv4(),
+           orderId: delivery[0].orderId,
+           fromStatus: order[0].status || null,
+           toStatus: orderStatus,
+           changedBy: auth.userId,
+           reason: actionMsg || `Delivery status: ${newStatus}`,
+           createdAt: new Date(),
+         })
 
         await sendOrderStatusNotification({
           orderNumber: order[0].orderNumber,
           newStatus: orderStatus,
           hotelAccountId: order[0].hotelAccountId,
+          additionalMessage: actionMsg,
         })
       }
     }

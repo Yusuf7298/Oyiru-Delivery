@@ -377,6 +377,7 @@ export const oyruOrderItems = pgTable('oyru_order_items', {
   productId: text('productId').notNull().references(() => products.id, { onDelete: 'cascade' }),
   quantity: integer('quantity').notNull(),
   unitPrice: decimal('unitPrice', { precision: 10, scale: 2 }).notNull(),
+  status: text('status').notNull().default('approved'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
@@ -400,7 +401,7 @@ export const inventoryLogs = pgTable('inventory_logs', {
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 
-export const returnStatusEnum = pgEnum('return_status', ['pending', 'approved', 'rejected', 'completed'])
+export const returnStatusEnum = pgEnum('return_status', ['pending', 'approved', 'rejected', 'collected', 'completed'])
 
 export const oyruOrderFeedbacks = pgTable('oyru_order_feedbacks', {
   id: text('id').primaryKey(),
@@ -417,6 +418,8 @@ export const oyruOrderReturns = pgTable('oyru_order_returns', {
   userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
   reason: text('reason').notNull(),
   status: returnStatusEnum('status').default('pending'),
+  driverId: text('driverId').references(() => user.id, { onDelete: 'set null' }),
+  rejectionReason: text('rejectionReason'),
   adminNotes: text('adminNotes'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
