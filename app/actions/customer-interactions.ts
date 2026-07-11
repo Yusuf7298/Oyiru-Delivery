@@ -228,61 +228,66 @@ export async function getAllReturnsAdmin() {
 export async function updateReturnStatusAdmin(returnId: string, status: string, adminNotes?: string) {
   await ensureAdmin()
 
-  const orderReturn = await db.query.oyruOrderReturns.findFirst({
-    where: eq(oyruOrderReturns.id, returnId)
-  })
-
-  if (!orderReturn) throw new Error('Return not found')
-
-  if (status === 'completed' && orderReturn.status !== 'completed') {
-    // 1. Fetch return items to know what to deduct and restore
-    const returnItems = await db.select({
-      orderItemId: oyruOrderReturnItems.orderItemId,
-      quantity: oyruOrderReturnItems.quantity,
-      productId: oyruOrderItems.productId,
-      unitPrice: oyruOrderItems.unitPrice
+  await db.transaction(async (tx) => {
+    const orderReturn = await tx.query.oyruOrderReturns.findFirst({
+      where: eq(oyruOrderReturns.id, returnId)
     })
-      .from(oyruOrderReturnItems)
-      .innerJoin(oyruOrderItems, eq(oyruOrderReturnItems.orderItemId, oyruOrderItems.id))
-      .where(eq(oyruOrderReturnItems.returnId, returnId))
 
-    let refundAmount = 0
+    if (!orderReturn) throw new Error('Return not found')
 
-    // 2. Add back to inventory and calculate refund amount
-    for (const item of returnItems) {
-      refundAmount += parseFloat(item.unitPrice) * item.quantity
+    if (status === 'completed' && orderReturn.status !== 'completed') {
+      // 1. Fetch return items to know what to deduct and restore
+      const returnItems = await tx.select({
+        orderItemId: oyruOrderReturnItems.orderItemId,
+        quantity: oyruOrderReturnItems.quantity,
+        productId: oyruOrderItems.productId,
+        unitPrice: oyruOrderItems.unitPrice
+      })
+        .from(oyruOrderReturnItems)
+        .innerJoin(oyruOrderItems, eq(oyruOrderReturnItems.orderItemId, oyruOrderItems.id))
+        .where(eq(oyruOrderReturnItems.returnId, returnId))
 
-      const product = await db.query.products.findFirst({
-        where: eq(products.id, item.productId)
+      let refundAmount = 0
+
+      // 2. Add back to inventory and calculate refund amount
+      for (const item of returnItems) {
+        refundAmount += parseFloat(item.unitPrice) * item.quantity
+
+        const productRows = await tx
+          .select({ stockQuantity: products.stockQuantity })
+          .from(products)
+          .where(eq(products.id, item.productId))
+          .for('update')
+        const product = productRows[0]
+
+        if (product) {
+          await tx.update(products)
+            .set({ stockQuantity: product.stockQuantity + item.quantity })
+            .where(eq(products.id, item.productId))
+        }
+      }
+
+      // 3. Deduct refundAmount from order total
+      const order = await tx.query.oyruOrders.findFirst({
+        where: eq(oyruOrders.id, orderReturn.orderId)
       })
 
-      if (product) {
-        await db.update(products)
-          .set({ stockQuantity: product.stockQuantity + item.quantity })
-          .where(eq(products.id, item.productId))
+      if (order) {
+        const newTotal = Math.max(0, parseFloat(order.totalAmount || '0') - refundAmount)
+        await tx.update(oyruOrders)
+          .set({ totalAmount: newTotal.toString() })
+          .where(eq(oyruOrders.id, order.id))
       }
     }
 
-    // 3. Deduct refundAmount from order total
-    const order = await db.query.oyruOrders.findFirst({
-      where: eq(oyruOrders.id, orderReturn.orderId)
-    })
-
-    if (order) {
-      const newTotal = Math.max(0, parseFloat(order.totalAmount || '0') - refundAmount)
-      await db.update(oyruOrders)
-        .set({ totalAmount: newTotal.toString() })
-        .where(eq(oyruOrders.id, order.id))
-    }
-  }
-
-  await db.update(oyruOrderReturns)
-    .set({
-      status: status as any,
-      adminNotes,
-      updatedAt: new Date()
-    })
-    .where(eq(oyruOrderReturns.id, returnId))
+    await tx.update(oyruOrderReturns)
+      .set({
+        status: status as any,
+        adminNotes,
+        updatedAt: new Date()
+      })
+      .where(eq(oyruOrderReturns.id, returnId))
+  })
 
   return { success: true }
 }
@@ -544,9 +549,12 @@ export async function inspectB2BReturnedProducts(returnId: string, accept: boole
 
       // 2. Increment stock quantities
       for (const item of returnItems) {
-        const product = await tx.query.products.findFirst({
-          where: eq(products.id, item.productId)
-        })
+        const productRows = await tx
+          .select({ stockQuantity: products.stockQuantity })
+          .from(products)
+          .where(eq(products.id, item.productId))
+          .for('update')
+        const product = productRows[0]
         if (product) {
           await tx
             .update(products)

@@ -100,9 +100,12 @@ export async function approveB2BOrderProducts(orderId: string, approvedItemIds: 
           newTotal += parseFloat(item.unitPrice) * item.quantity
 
           // Decrement stock atomically (since it is approved now)
-          const product = await tx.query.products.findFirst({
-            where: eq(products.id, item.productId)
-          })
+          const productRows = await tx
+            .select({ stockQuantity: products.stockQuantity })
+            .from(products)
+            .where(eq(products.id, item.productId))
+            .for('update')
+          const product = productRows[0]
           if (product) {
             await tx
               .update(products)

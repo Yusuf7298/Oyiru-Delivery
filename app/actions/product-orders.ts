@@ -93,9 +93,12 @@ export async function createProductOrder(data: {
 
         // Guarded decrement: re-check stock inside the transaction to avoid
         // overselling under concurrent orders; roll back if it slipped below.
-        const product = await tx.query.products.findFirst({
-          where: eq(products.id, item.productId)
-        })
+        const productRows = await tx
+          .select({ stockQuantity: products.stockQuantity })
+          .from(products)
+          .where(eq(products.id, item.productId))
+          .for('update')
+        const product = productRows[0]
         if (!product || product.stockQuantity < item.quantity) {
           throw new Error(`Insufficient stock for product ${item.productId}`)
         }

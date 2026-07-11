@@ -88,3 +88,14 @@ export function requireDelivery(auth: AuthContext | null): boolean {
   return auth.role === 'delivery' || auth.role === 'delivery_partner'
 }
 
+export async function assertAuth(allowedRoles?: UserRole[]): Promise<AuthContext> {
+  const authContext = await getAuthContext()
+  if (!authContext || !authContext.isAuthenticated) {
+    throw new Error('Unauthorized: Authentication required')
+  }
+  if (allowedRoles && !allowedRoles.includes(authContext.role)) {
+    throw new Error(`Forbidden: Access restricted to roles [${allowedRoles.join(', ')}]`)
+  }
+  return authContext
+}
+
